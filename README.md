@@ -29,18 +29,21 @@ The site is a 7-step pizza ordering wizard. At each step, it calls `navigator.mo
 
 If your browser doesn't have a real `navigator.modelContext` implementation, the site automatically loads a polyfill shim. This creates a `navigator.modelContext` object (also available as `window.mcp`) that lets you invoke tools from the DevTools console.
 
-### Inspect available tools
+### 1. See what you can do
 
 Open the browser console and type:
 
 ```js
-mcp.help()       // list tools for the current step with params
-mcp.tools        // raw tool schema array
+mcp.help()                        // copy-paste-ready commands for the current step
+mcp.help('select-order-type')     // detailed params for one tool
+mcp.tools                         // raw tool schema array
 ```
 
-### Golden path: order a large pepperoni pizza for delivery
+`mcp.help()` prints a ready-to-paste `await mcp.call(...)` line for every tool in the current step, pre-filled with golden-path example values. Just copy, paste, and run.
 
-Paste these one at a time (each returns a result with text + order state):
+### 2. Golden path: order a large pepperoni pizza for delivery
+
+Copy-paste these one at a time (or run `mcp.help()` at each step to get the snippets):
 
 ```js
 // Step 1 → choose delivery
@@ -65,13 +68,7 @@ await mcp.call('add-side', { sideId: 'bread-bites' })
 await mcp.call('proceed-to-checkout', {})
 
 // Step 7 → fill contact info and place the order
-await mcp.call('set-checkout-info', {
-  firstName: 'John',
-  lastName: 'Doe',
-  phone: '4255551234',
-  email: 'john@example.com',
-  leaveAtDoor: true
-})
+await mcp.call('set-checkout-info', { firstName: 'John', lastName: 'Doe', phone: '4255551234', email: 'john@example.com' })
 await mcp.call('place-order', {})
 ```
 
@@ -81,7 +78,8 @@ Each call updates the UI in real time — you'll see the page navigate, forms fi
 
 | Method | Description |
 |--------|-------------|
-| `mcp.help()` | Pretty-print all tools for the current step |
+| `mcp.help()` | Print copy-paste-ready `mcp.call(...)` snippets for every tool in the current step |
+| `mcp.help('tool-name')` | Show detailed params, types, and enums for a single tool |
 | `mcp.tools` | Get array of tool schemas (name, description, inputSchema) |
 | `mcp.call(toolName, params)` | Execute a tool and return its result |
 | `navigator.modelContext.provideContext({ tools })` | (Called internally) Replace registered tools |
