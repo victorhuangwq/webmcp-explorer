@@ -2,14 +2,40 @@
 
 A Domino's-style pizza ordering site that implements the [WebMCP](https://nickreynolds.github.io/WebMCP/) browser API. Built as a demo for browser agents that can discover and call tools exposed by web pages.
 
+## 🚀 Live Demo
+
+**[View Live Site on GitHub Pages](https://github.com/your-username/checkers-pizza-webmcp-demo)** (update this URL after pushing to GitHub)
+
 ## Quick Start
+
+### Option 1: Using Node.js (with auto-reload)
 
 ```bash
 npm install
 npm start
 ```
 
-Open **http://localhost:3000** in your browser.
+Then open **http://localhost:3000** in your browser.
+
+### Option 2: Using http-server (no dependencies needed)
+
+```bash
+npx http-server -p 3000
+```
+
+Then open **http://localhost:3000** in your browser.
+
+### Option 3: Using Python
+
+```bash
+# Python 3
+python -m http.server 3000
+
+# Python 2
+python -m SimpleHTTPServer 3000
+```
+
+Then open **http://localhost:3000** in your browser.
 
 ## How It Works
 
@@ -111,19 +137,43 @@ Every tool returns:
 - `content` — follows the MCP tool response format
 - `orderState` — snapshot of the current order (type, address, cart, totals, etc.)
 
+## Deployment
+
+### Automatic Deployment via GitHub Actions
+
+This site automatically deploys to GitHub Pages via GitHub Actions whenever you push to the `main` branch. No configuration needed!
+
+**GitHub Actions Status:**
+- View deployment logs: Go to [Actions tab](https://github.com/USERNAME/REPO/actions) and check the "Deploy to GitHub Pages" workflow
+- Deployments typically complete in 1-2 minutes
+- Each push to `main` triggers an automatic deployment
+
+**Your site will be available at:**
+```
+https://your-username.github.io/checkers-pizza-webmcp-demo/
+```
+
+**Manual deployment trigger (if needed):**
+1. Go to [Actions tab](https://github.com/USERNAME/REPO/actions)
+2. Select "Deploy to GitHub Pages" workflow
+3. Click "Run workflow" button
+4. Wait for completion (~1-2 minutes)
+
 ## Project Structure
 
 ```
-├── server.js                  # Express static file server (port 3000)
-├── package.json
-├── public/
-│   ├── index.html             # Single-page wizard (all 8 steps)
-│   ├── css/style.css          # Domino's-inspired styling
-│   └── js/
-│       ├── menu-data.js       # Mock catalog (pizzas, sides, toppings, store)
-│       ├── app.js             # Wizard controller, order state, DOM rendering
-│       ├── webmcp-shim.js     # modelContext polyfill for console testing
-│       └── webmcp-tools.js    # Tool definitions per step, provideContext calls
+├── index.html             # Single-page wizard (all 8 steps)
+├── css/
+│   └── style.css          # Domino's-inspired styling
+├── js/
+│   ├── menu-data.js       # Mock catalog (pizzas, sides, toppings, store)
+│   ├── app.js             # Wizard controller, order state, DOM rendering
+│   ├── webmcp-shim.js     # modelContext polyfill for console testing
+│   └── webmcp-tools.js    # Tool definitions per step, provideContext calls
+├── server.js              # (Optional) Express dev server for local development
+├── package.json           # (Optional) Development dependencies
+├── .nojekyll              # Disables Jekyll processing on GitHub Pages
+└── README.md
 ```
 
 ## Available Tools Reference

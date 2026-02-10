@@ -5,9 +5,14 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "serve": "npx http-server -p 3000",
+    "deploy": "gh-pages -d ."
   },
   "dependencies": {
     "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.1.1"
   }
 }
