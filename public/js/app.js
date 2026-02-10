@@ -40,6 +40,7 @@ function goToStep(step) {
 
   // Render step content
   switch (step) {
+    case 1: renderHomeCategoryGrid(); break;
     case 3: renderCategories(); break;
     case 4: renderPizzaList(); break;
     case 5: renderCustomize(); break;
@@ -143,6 +144,18 @@ const CATEGORY_EMOJIS = {
   'drinks': '🥤', 'extras': '🧂'
 };
 
+function renderHomeCategoryGrid() {
+  const grid = document.getElementById('homeCategoryGrid');
+  if (!grid) return;
+  grid.innerHTML = CATEGORIES.map(cat => `
+    <div class="home-cat-card" onclick="selectOrderType('delivery')">
+      ${cat.badge ? `<span class="home-cat-badge">${cat.badge}</span>` : ''}
+      <div class="home-cat-img-placeholder">${CATEGORY_EMOJIS[cat.id] || '🍽️'}</div>
+      <div class="home-cat-label">${cat.name}</div>
+    </div>
+  `).join('');
+}
+
 function renderCategories() {
   const grid = document.getElementById('categoryGrid');
   grid.innerHTML = CATEGORIES.map(cat => `
@@ -188,6 +201,7 @@ function renderPizzaList() {
       <div class="pizza-card-info">
         <div class="pizza-card-name">${pizza.name}</div>
         <div class="pizza-card-desc">${pizza.description}</div>
+        <div class="pizza-card-price">From $${pizza.basePrice.toFixed(2)}</div>
       </div>
     </div>
   `).join('');
@@ -710,12 +724,15 @@ function calculateTotals() {
 
 function updateNavDeliveryInfo() {
   const el = document.getElementById('navDeliveryInfo');
+  const pill = document.getElementById('navLocationPill');
   if (orderState.address && orderState.store && currentStep >= 3) {
     el.style.display = 'flex';
+    if (pill) pill.style.display = 'none';
     document.getElementById('navDeliveryText').textContent =
-      `Delivery · ${orderState.store.deliveryEstimate} · ${orderState.address.substring(0, 30)}${orderState.address.length > 30 ? '...' : ''}`;
+      `Delivery \u00B7 ${orderState.store.deliveryEstimate} \u00B7 ${orderState.address.substring(0, 30)}${orderState.address.length > 30 ? '...' : ''}`;
   } else {
     el.style.display = 'none';
+    if (pill) pill.style.display = 'flex';
   }
 }
 

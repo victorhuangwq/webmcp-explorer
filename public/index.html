@@ -11,9 +11,10 @@
   <!-- ============== HEADER NAV BAR ============== -->
   <header class="top-nav">
     <div class="nav-left">
-      <a href="#" class="nav-link active" data-nav="home">HOME</a>
+      <a href="#" class="nav-link active" data-nav="home">ORDER NOW</a>
       <a href="#" class="nav-link" data-nav="menu">MENU</a>
       <a href="#" class="nav-link" data-nav="deals">DEALS</a>
+      <a href="#" class="nav-link" data-nav="rewards">MY REWARDS</a>
       <a href="#" class="nav-link" data-nav="tracker">TRACKER</a>
     </div>
     <div class="nav-logo">
@@ -21,6 +22,10 @@
       <span class="logo-text">Checkers<br>Pizza</span>
     </div>
     <div class="nav-right">
+      <div class="nav-location-pill" id="navLocationPill">
+        <span class="nav-location-icon">📍</span>
+        <span id="navLocationText">Choose your location</span>
+      </div>
       <div class="nav-delivery-info" id="navDeliveryInfo" style="display:none;">
         <span class="delivery-badge">🕐</span>
         <span id="navDeliveryText"></span>
@@ -34,22 +39,51 @@
     </div>
   </header>
 
-  <!-- ============== STEP 1: ORDER TYPE ============== -->
+  <!-- ============== STEP 1: ORDER TYPE + MENU HOME ============== -->
   <section class="step" id="step-1">
-    <div class="order-type-banner">
-      <h1 class="section-headline">START YOUR ORDER</h1>
-      <div class="order-type-buttons">
-        <button class="order-type-btn delivery-btn" onclick="selectOrderType('delivery')">DELIVERY</button>
-        <span class="order-type-or">OR</span>
-        <button class="order-type-btn carryout-btn" onclick="selectOrderType('carryout')">CARRYOUT</button>
+    <div class="home-page">
+      <!-- MENU Headline + Tabs -->
+      <div class="menu-header-row">
+        <h1 class="menu-main-title">MENU</h1>
+        <div class="menu-tabs-home">
+          <button class="menu-tab-home active">MENU</button>
+          <button class="menu-tab-home">RECENT ITEMS</button>
+        </div>
       </div>
-    </div>
-    <div class="hero-banner">
-      <div class="hero-content">
-        <p class="hero-tag">MIX AND MATCH</p>
-        <h2 class="hero-title">CHOOSE ANY TWO FOR $6.99 EACH.</h2>
-        <p class="hero-desc">Your choice of any two or more medium pizzas, sides, and desserts.</p>
-        <button class="btn-primary hero-cta">ADD DEAL</button>
+
+      <!-- START YOUR ORDER Banner -->
+      <div class="order-type-banner">
+        <h2 class="order-banner-title">START YOUR ORDER</h2>
+        <div class="order-type-buttons">
+          <button class="order-type-btn delivery-btn" onclick="selectOrderType('delivery')">DELIVERY</button>
+          <span class="order-type-or">OR</span>
+          <button class="order-type-btn carryout-btn" onclick="selectOrderType('carryout')">CARRYOUT</button>
+        </div>
+      </div>
+
+      <!-- Category Grid -->
+      <div class="home-category-grid" id="homeCategoryGrid">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Deals Banner -->
+      <div class="home-deals-banner">
+        <div class="deal-card">
+          <div class="deal-card-icon">🏷️</div>
+          <div class="deal-card-text">
+            <div class="deal-card-title">MIX & MATCH</div>
+            <div class="deal-card-desc">Choose any 2 or more for $6.99 each. Medium pizzas, bread, pasta, and more.</div>
+          </div>
+          <button class="btn-primary deal-card-btn" onclick="selectOrderType('delivery')">ORDER NOW</button>
+        </div>
+        <div class="deal-card">
+          <div class="deal-card-icon">🎉</div>
+          <div class="deal-card-text">
+            <div class="deal-card-title">CARRYOUT SPECIAL</div>
+            <div class="deal-card-desc">All medium 1-topping pizzas $5.99 when you pick up in store.</div>
+          </div>
+          <button class="btn-outline deal-card-btn" onclick="selectOrderType('carryout')">ORDER NOW</button>
+        </div>
       </div>
     </div>
   </section>
@@ -128,6 +162,7 @@
   <!-- ============== STEP 4: PIZZA SELECTION ============== -->
   <section class="step" id="step-4" style="display:none;">
     <div class="pizza-list-page">
+      <button class="back-to-menu" onclick="goToStep(3)">‹ Back to Menu</button>
       <h1 class="section-headline" id="categoryTitle">SPECIALTY PIZZAS</h1>
       <div class="pizza-grid" id="pizzaGrid">
         <!-- Populated by JS -->
@@ -351,6 +386,7 @@
   <!-- Scripts -->
   <script src="js/menu-data.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/webmcp-shim.js"></script>
   <script src="js/webmcp-tools.js"></script>
 
 </body>

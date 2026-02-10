@@ -16,17 +16,17 @@ const STORE = {
 };
 
 const CATEGORIES = [
-  { id: 'build-your-own', name: 'Build Your Own', image: 'images/categories/build-your-own.jpg', badge: null },
-  { id: 'specialty', name: 'Specialty Pizzas', image: 'images/categories/specialty.jpg', badge: 'NEW!' },
-  { id: 'breads', name: 'Breads', image: 'images/categories/breads.jpg', badge: 'NEW!' },
-  { id: 'loaded-tots', name: 'Loaded Tots', image: 'images/categories/loaded-tots.jpg', badge: null },
-  { id: 'chicken', name: 'Chicken', image: 'images/categories/chicken.jpg', badge: null },
-  { id: 'desserts', name: 'Desserts', image: 'images/categories/desserts.jpg', badge: 'NEW!' },
-  { id: 'pastas', name: 'Oven-Baked Pastas', image: 'images/categories/pastas.jpg', badge: null },
-  { id: 'sandwiches', name: 'Oven-Baked Sandwiches', image: 'images/categories/sandwiches.jpg', badge: null },
-  { id: 'salads', name: 'Salads', image: 'images/categories/salads.jpg', badge: null },
-  { id: 'drinks', name: 'Drinks', image: 'images/categories/drinks.jpg', badge: null },
-  { id: 'extras', name: 'Extras', image: 'images/categories/extras.jpg', badge: null }
+  { id: 'build-your-own', name: 'Build Your Own', badge: null },
+  { id: 'specialty', name: 'Specialty Pizzas', badge: 'NEW!' },
+  { id: 'breads', name: 'Breads', badge: 'NEW!' },
+  { id: 'loaded-tots', name: 'Loaded Tots', badge: null },
+  { id: 'chicken', name: 'Chicken', badge: null },
+  { id: 'desserts', name: 'Desserts', badge: 'NEW!' },
+  { id: 'pastas', name: 'Oven-Baked Pastas', badge: null },
+  { id: 'sandwiches', name: 'Oven-Baked Sandwiches', badge: null },
+  { id: 'salads', name: 'Salads', badge: null },
+  { id: 'drinks', name: 'Drinks', badge: null },
+  { id: 'extras', name: 'Extras', badge: null }
 ];
 
 const PIZZAS = [
