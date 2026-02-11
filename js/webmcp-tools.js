@@ -13,52 +13,12 @@
  * Step 7: Checkout → set-checkout-info, place-order
  *
  * GETTER TOOLS (read-only, available at relevant steps):
- * - get-current-state: Available at ALL steps
  * - get-menu-categories: Available at Step 3
  * - get-available-pizzas: Available at Steps 4-5
  * - get-available-toppings: Available at Step 5
  */
 
 // ============ GETTER TOOLS (READ-ONLY) ============
-
-/**
- * Get current order state at any point
- */
-function createGetCurrentStateTool() {
-  return {
-    name: 'get-current-state',
-    description: 'Get the current order state including step, selections, cart contents, and totals. Available at all steps.',
-    inputSchema: {
-      type: 'object',
-      properties: {}
-    },
-    execute() {
-      const totals = getCartTotals();
-      return {
-        content: [{
-          type: 'text',
-          text: JSON.stringify({
-            currentStep: window.currentStep || 1,
-            orderType: orderState.orderType,
-            address: orderState.address,
-            selectedPizza: orderState.selectedPizza,
-            currentPizza: orderState.currentPizza,
-            cart: {
-              items: orderState.cart,
-              itemCount: orderState.cart.length,
-              subtotal: totals.subtotal,
-              deliveryFee: totals.deliveryFee,
-              tax: totals.tax,
-              total: totals.total
-            },
-            availableActions: getAvailableActions()
-          }, null, 2)
-        }],
-        orderState: getOrderStateSnapshot()
-      };
-    }
-  };
-}
 
 /**
  * Get available menu categories
@@ -221,8 +181,7 @@ function registerToolsForStep(step) {
 }
 
 function getToolsForStep(step) {
-  // get-current-state is always available
-  const tools = [createGetCurrentStateTool()];
+  const tools = [];
 
   switch (step) {
     case 1:
@@ -260,13 +219,13 @@ function getStep1Tools() {
   return [
     {
       name: 'select-order-type',
-      description: `Select the order type for this pizza order. Step 1 of 7.
+      description: `Select the order type for this pizza order.
 
 Choose one:
 • 'delivery': Pizza will be delivered to you (delivery fees apply)
 • 'carryout': You'll pick up the order at the store
 
-NEXT: Proceed to Step 2 to set delivery address or confirm location.`,
+NEXT: Proceed to set delivery address or confirm location.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -290,7 +249,7 @@ function getStep2Tools() {
   return [
     {
       name: 'set-delivery-address',
-      description: `Set the delivery address and find the nearest store. Step 2 of 7.
+      description: `Set the delivery address and find the nearest store.
 
 INPUT: Complete address including street, city, state, ZIP.
 Example: "1 Microsoft Way, Redmond, WA 98052"
@@ -314,14 +273,14 @@ NEXT: Call 'confirm-location' to proceed to the menu.`,
     },
     {
       name: 'confirm-location',
-      description: `Confirm the delivery location and order timing, then proceed to the menu. Step 2 of 7.
+      description: `Confirm the delivery location and order timing, then proceed to the menu.
 
 PARAMETERS:
 • timing (optional): 'now' (default - prepare immediately) or 'later' (schedule for ~1 hour from now)
 
 PREREQUISITE: Must call 'set-delivery-address' first to set an address.
 
-NEXT: Proceed to Step 3 (Menu Categories).`,
+NEXT: Proceed to menu categories.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -344,14 +303,14 @@ function getStep3Tools() {
   return [
     {
       name: 'select-category',
-      description: `Select a menu category to browse items. Step 3 of 7.
+      description: `Select a menu category to browse items.
 
 For pizza orders: Choose 'build-your-own' or 'specialty'
-For sides/drinks: These can be added later in Step 6 (Cart)
+For sides/drinks: These can be added later in the cart
 
 Use 'get-menu-categories' tool to see detailed descriptions of all categories.
 
-NEXT: Proceed to Step 4 (Pizza Selection).`,
+NEXT: Proceed to pizza selection.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -375,7 +334,7 @@ function getStep4Tools() {
   return [
     {
       name: 'select-pizza',
-      description: `Select a pizza to customize. Step 4 of 7.
+      description: `Select a pizza to customize.
 
 Use 'get-available-pizzas' tool to see all options with descriptions and default toppings.
 
@@ -383,7 +342,7 @@ Quick reference:
 • Classics: pepperoni, cheese
 • Specialty: meatzza, extravaganzza, veggie, bbq-chicken, spicy-bacon, hawaiian
 
-NEXT: Proceed to Step 5 (Customize) to modify size, crust, toppings, and quantity.`,
+NEXT: Proceed to customize pizza to modify size, crust, toppings, and quantity.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -406,7 +365,7 @@ function getStep5Tools() {
   return [
     {
       name: 'customize-pizza',
-      description: `Customize the selected pizza. Step 5 of 7. All parameters optional - omitted fields keep current values.
+      description: `Customize the selected pizza. All parameters optional - omitted fields keep current values.
 
 PARAMETERS:
 • size: 'small' (10"), 'medium' (12"), 'large' (14")
@@ -449,9 +408,9 @@ NEXT: Call 'add-to-cart' to add this pizza to your order.`,
     },
     {
       name: 'add-to-cart',
-      description: `Add the customized pizza to the cart. Step 5 of 7.
+      description: `Add the customized pizza to the cart.
 
-NEXT: Proceed to Step 6 (Cart) to review items, add sides, or checkout.`,
+NEXT: Proceed to review cart, add sides, or checkout.`,
       inputSchema: {
         type: 'object',
         properties: {}
@@ -468,7 +427,7 @@ function getStep6Tools() {
   return [
     {
       name: 'update-cart-item',
-      description: 'Update the quantity of a cart item, or remove it by setting quantity to 0. Step 6 of 7.',
+      description: 'Update the quantity of a cart item, or remove it by setting quantity to 0.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -490,7 +449,7 @@ function getStep6Tools() {
     },
     {
       name: 'add-side',
-      description: `Add a side item to the cart. Step 6 of 7. Can be called multiple times to add different sides.
+      description: `Add a side item to the cart. Can be called multiple times to add different sides.
 
 AVAILABLE SIDES:
 • 'bread-bites': Seasoned bite-sized bread pieces ($6.99)
@@ -519,11 +478,11 @@ AVAILABLE SIDES:
     },
     {
       name: 'proceed-to-checkout',
-      description: `Proceed from cart to checkout. Step 6 of 7.
+      description: `Proceed from cart to checkout.
 
 PREREQUISITE: Cart must have at least one item.
 
-NEXT: Step 7 (Checkout) - You'll enter contact info and place the order.`,
+NEXT: You'll enter contact info and place the order.`,
       inputSchema: {
         type: 'object',
         properties: {}
@@ -540,7 +499,7 @@ function getStep7Tools() {
   return [
     {
       name: 'set-checkout-info',
-      description: `Set customer contact information and delivery preferences. Step 7 of 7.
+      description: `Set customer contact information and delivery preferences.
 
 REQUIRED FIELDS:
 • firstName: Customer's first name
@@ -589,7 +548,7 @@ NEXT: Call 'place-order' to finalize the order.`,
     },
     {
       name: 'place-order',
-      description: `Place the order. FINAL STEP (7 of 7).
+      description: `Place the order.
 
 PREREQUISITE: Must call 'set-checkout-info' first to set contact information.
 
