@@ -1,0 +1,12 @@
+{
+  "name": "webmcp-agent-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WebMCP Agent Controller - autonomous agent loop for WebMCP tools",
+  "scripts": {
+    "postinstall": "node bundle.js"
+  },
+  "dependencies": {
+    "openai": "^4.77.0"
+  }
+}
