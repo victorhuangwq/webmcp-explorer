@@ -39,10 +39,15 @@ body {
   transition: color 0.15s, border-color 0.15s;
 }
 
-.tab:hover { color: #2563eb; }
+.tab:hover { color: #2563eb; background: transparent; }
+.tab:focus, .tab:focus-visible {
+  outline: none;
+  background: transparent;
+}
 .tab.active {
   color: #2563eb;
   border-bottom-color: #2563eb;
+  background: transparent;
 }
 
 /* Tab content */
