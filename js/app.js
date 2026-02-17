@@ -801,26 +801,28 @@ function getStateSnapshot() {
 }
 
 // ============ URL STATE MANAGEMENT ============
+const BASE_PATH = '/pizza-order-demo';
+
 const STEP_PATHS = {
-  1: '/',
-  2: '/location',
-  3: '/menu',
-  4: '/pizzas',
-  5: '/customize',
-  6: '/cart',
-  7: '/checkout',
-  8: '/confirmation'
+  1: BASE_PATH + '/',
+  2: BASE_PATH + '/location',
+  3: BASE_PATH + '/menu',
+  4: BASE_PATH + '/pizzas',
+  5: BASE_PATH + '/customize',
+  6: BASE_PATH + '/cart',
+  7: BASE_PATH + '/checkout',
+  8: BASE_PATH + '/confirmation'
 };
 
 const PATH_TO_STEP = {
-  '/': 1,
-  '/location': 2,
-  '/menu': 3,
-  '/pizzas': 4,
-  '/customize': 5,
-  '/cart': 6,
-  '/checkout': 7,
-  '/confirmation': 8
+  [BASE_PATH + '/']: 1,
+  [BASE_PATH + '/location']: 2,
+  [BASE_PATH + '/menu']: 3,
+  [BASE_PATH + '/pizzas']: 4,
+  [BASE_PATH + '/customize']: 5,
+  [BASE_PATH + '/cart']: 6,
+  [BASE_PATH + '/checkout']: 7,
+  [BASE_PATH + '/confirmation']: 8
 };
 
 function updateURL() {
@@ -903,7 +905,7 @@ function goToHome() {
 document.addEventListener('DOMContentLoaded', () => {
   // Check if there's a path indicating a specific step, otherwise start at step 1
   const path = window.location.pathname;
-  if (path !== '/' && PATH_TO_STEP[path]) {
+  if (path !== BASE_PATH + '/' && PATH_TO_STEP[path]) {
     restoreFromURL();
   } else {
     goToStep(1);
