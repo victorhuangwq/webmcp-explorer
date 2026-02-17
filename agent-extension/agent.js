@@ -53,7 +53,7 @@ function createClient() {
 }
 
 /**
- * Convert WebMCP tool definitions to OpenAI function calling format.
+ * Convert WebMCP tool definitions to Responses API function tool format.
  */
 function convertToolsToOpenAI(webmcpTools) {
   return webmcpTools.map((tool) => {
@@ -67,55 +67,60 @@ function convertToolsToOpenAI(webmcpTools) {
     }
     return {
       type: 'function',
-      function: {
-        name: tool.name,
-        description: tool.description || '',
-        parameters,
-      },
+      name: tool.name,
+      description: tool.description || '',
+      parameters,
     };
   });
 }
 
 /**
- * Send a chat completion request to Azure OpenAI.
+ * Send a request to Azure OpenAI using the Responses API.
+ * @param {Array} input - Input items (messages, function_call_output, etc.)
+ * @param {Array} tools - WebMCP tool definitions
+ * @param {string|null} previousResponseId - Previous response ID for chaining
  */
-async function sendMessage(messages, tools = []) {
+async function sendMessage(input, tools = [], previousResponseId = null) {
   const client = createClient();
   const s = getSettings();
 
   const requestParams = {
     model: s.deploymentName,
-    messages,
+    input,
   };
+
+  if (previousResponseId) {
+    requestParams.previous_response_id = previousResponseId;
+  }
 
   if (tools.length > 0) {
     requestParams.tools = convertToolsToOpenAI(tools);
     requestParams.tool_choice = 'auto';
   }
 
-  const response = await client.chat.completions.create(requestParams);
-  const choice = response.choices[0];
+  const response = await client.responses.create(requestParams);
 
-  if (!choice) {
+  if (!response.output || response.output.length === 0) {
     throw new Error('No response from Azure OpenAI');
   }
 
-  const message = choice.message;
+  // Check for function calls in output
+  const toolCalls = response.output.filter((item) => item.type === 'function_call');
 
-  if (message.tool_calls && message.tool_calls.length > 0) {
+  if (toolCalls.length > 0) {
     return {
-      toolCalls: message.tool_calls.map((tc) => ({
-        id: tc.id,
-        name: tc.function.name,
-        arguments: tc.function.arguments,
+      toolCalls: toolCalls.map((tc) => ({
+        id: tc.call_id,
+        name: tc.name,
+        arguments: tc.arguments,
       })),
-      rawMessage: message,
+      responseId: response.id,
     };
   }
 
   return {
-    text: message.content || '',
-    rawMessage: message,
+    text: response.output_text || '',
+    responseId: response.id,
   };
 }
 
@@ -185,8 +190,10 @@ export async function runAgent(goal, options = {}) {
     signal,
   } = options;
 
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
+  // Responses API: track previous response ID for chaining turns
+  let previousResponseId = null;
+  // Current input items for the next request
+  let input = [
     { role: 'user', content: `Goal: ${goal}` },
   ];
 
@@ -205,24 +212,60 @@ export async function runAgent(goal, options = {}) {
       return;
     }
 
-    // 2. Update system message with current tools
-    messages[0] = {
-      role: 'system',
-      content: SYSTEM_PROMPT + '\n\nCURRENTLY AVAILABLE TOOLS:\n' +
-        tools.map((t) => {
-          const schema = t.inputSchema
-            ? (typeof t.inputSchema === 'string' ? t.inputSchema : JSON.stringify(t.inputSchema))
-            : '{}';
-          return `- ${t.name}: ${t.description}\n  inputSchema: ${schema}`;
-        }).join('\n'),
-    };
+    // 2. Build instructions with current tool descriptions
+    const instructions = SYSTEM_PROMPT + '\n\nCURRENTLY AVAILABLE TOOLS:\n' +
+      tools.map((t) => {
+        const schema = t.inputSchema
+          ? (typeof t.inputSchema === 'string' ? t.inputSchema : JSON.stringify(t.inputSchema))
+          : '{}';
+        return `- ${t.name}: ${t.description}\n  inputSchema: ${schema}`;
+      }).join('\n');
 
-    // 3. Send to Azure OpenAI
-    onStep({ type: 'llm_request', data: { iteration, messageCount: messages.length } });
+    // 3. Send to Azure OpenAI (Responses API)
+    onStep({ type: 'llm_request', data: { iteration, messageCount: input.length } });
 
     let response;
     try {
-      response = await sendMessage(messages, tools);
+      // Pass instructions as a top-level param; input carries the user/tool messages
+      const client = createClient();
+      const s = getSettings();
+
+      const requestParams = {
+        model: s.deploymentName,
+        instructions,
+        input,
+        tools: convertToolsToOpenAI(tools),
+        tool_choice: 'auto',
+      };
+
+      if (previousResponseId) {
+        requestParams.previous_response_id = previousResponseId;
+      }
+
+      const apiResponse = await client.responses.create(requestParams);
+
+      if (!apiResponse.output || apiResponse.output.length === 0) {
+        throw new Error('No response from Azure OpenAI');
+      }
+
+      // Parse response
+      const toolCalls = apiResponse.output.filter((item) => item.type === 'function_call');
+
+      if (toolCalls.length > 0) {
+        response = {
+          toolCalls: toolCalls.map((tc) => ({
+            id: tc.call_id,
+            name: tc.name,
+            arguments: tc.arguments,
+          })),
+          responseId: apiResponse.id,
+        };
+      } else {
+        response = {
+          text: apiResponse.output_text || '',
+          responseId: apiResponse.id,
+        };
+      }
     } catch (err) {
       onStep({ type: 'error', data: { iteration, error: err.message } });
       return;
@@ -241,15 +284,16 @@ export async function runAgent(goal, options = {}) {
 
     // 5. Handle text-only response (goal achieved)
     if (response.text && !response.toolCalls) {
-      messages.push({ role: 'assistant', content: response.text });
+      previousResponseId = response.responseId;
       onStep({ type: 'completed', data: { iteration, reason: response.text } });
       return;
     }
 
     // 6. Handle tool calls
     if (response.toolCalls) {
-      // Append assistant message with tool calls
-      messages.push(response.rawMessage);
+      previousResponseId = response.responseId;
+      // Collect function_call_output items for the next request
+      const toolOutputs = [];
 
       for (const toolCall of response.toolCalls) {
         let parsedArgs;
@@ -270,10 +314,10 @@ export async function runAgent(goal, options = {}) {
           const approved = await waitForApproval(toolCall.name, parsedArgs);
           if (!approved) {
             onStep({ type: 'skipped', data: { iteration, name: toolCall.name } });
-            messages.push({
-              role: 'tool',
-              tool_call_id: toolCall.id,
-              content: 'Tool call was skipped by the user.',
+            toolOutputs.push({
+              type: 'function_call_output',
+              call_id: toolCall.id,
+              output: 'Tool call was skipped by the user.',
             });
             continue;
           }
@@ -299,15 +343,18 @@ export async function runAgent(goal, options = {}) {
 
         onStep({ type: 'tool_result', data: { iteration, name: toolCall.name, result: resultText } });
 
-        messages.push({
-          role: 'tool',
-          tool_call_id: toolCall.id,
-          content: resultText,
+        toolOutputs.push({
+          type: 'function_call_output',
+          call_id: toolCall.id,
+          output: resultText,
         });
 
         // Wait for page to settle
         await settle();
       }
+
+      // Next turn: send tool outputs as input, chained via previous_response_id
+      input = toolOutputs;
     }
   }
 
