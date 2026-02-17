@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -c:*)"
+      "Bash(node -c:*)",
+      "WebFetch(domain:platform.openai.com)"
     ]
   }
 }

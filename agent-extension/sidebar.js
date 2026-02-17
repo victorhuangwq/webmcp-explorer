@@ -90,10 +90,10 @@ function renderToolsList() {
   }
   toolsList.innerHTML = currentTools
     .map((t) => {
-      const desc = (t.description || '').split('\n')[0].substring(0, 60);
+      const desc = t.description || '';
       return `<div class="tool-chip" data-name="${t.name}">
         <span class="tool-name">${t.name}</span>
-        <span class="tool-desc" title="${t.description || ''}">${desc}</span>
+        <span class="tool-desc" title="${desc}">${desc}</span>
       </div>`;
     })
     .join('');

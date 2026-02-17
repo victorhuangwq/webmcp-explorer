@@ -7,6 +7,11 @@ const PORT = 3000;
 // Serve static files from the root directory
 app.use(express.static(__dirname));
 
+// SPA fallback: serve index.html for all routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Checkers Pizza demo running at http://localhost:${PORT}`);
 });

@@ -31,7 +31,7 @@ const orderState = {
 let currentStep = 1;
 
 // ============ STEP NAVIGATION ============
-function goToStep(step) {
+function goToStep(step, skipHistoryUpdate = false) {
   // Hide all steps
   document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
   // Show target step
@@ -41,6 +41,7 @@ function goToStep(step) {
   // Render step content
   switch (step) {
     case 1: renderHomeCategoryGrid(); break;
+    case 2: renderLocation(); break;
     case 3: renderCategories(); break;
     case 4: renderPizzaList(); break;
     case 5: renderCustomize(); break;
@@ -58,6 +59,11 @@ function goToStep(step) {
   // Register WebMCP tools for this step
   if (typeof registerToolsForStep === 'function') {
     registerToolsForStep(step);
+  }
+
+  // Update URL
+  if (!skipHistoryUpdate) {
+    updateURL();
   }
 
   // Scroll to top
@@ -86,6 +92,32 @@ function selectOrderType(type) {
 }
 
 // ============ STEP 2: LOCATION ============
+function renderLocation() {
+  // Update location question based on order type
+  const q = document.getElementById('locationQuestion');
+  if (orderState.orderType === 'delivery') {
+    q.textContent = 'Where should we deliver to?';
+    document.getElementById('addressInput').placeholder = 'Enter delivery address';
+  } else if (orderState.orderType === 'carryout') {
+    q.textContent = 'Find a store near you';
+    document.getElementById('addressInput').placeholder = 'Enter city, state, or zip';
+  }
+  
+  // If address already set, show store result
+  if (orderState.address && orderState.store) {
+    document.getElementById('addressEntry').style.display = 'none';
+    const result = document.getElementById('storeResult');
+    result.style.display = 'block';
+    document.getElementById('storeAddressDisplay').textContent = orderState.address.toUpperCase();
+    document.getElementById('storeCityDisplay').textContent = `${orderState.store.city}, ${orderState.store.state} ${orderState.store.zip}`;
+    document.getElementById('storeEstimateDisplay').textContent = `Delivery in ${orderState.store.deliveryEstimate}`;
+    document.getElementById('storePhoneDisplay').textContent = orderState.store.phone;
+  } else {
+    document.getElementById('addressEntry').style.display = 'block';
+    document.getElementById('storeResult').style.display = 'none';
+  }
+}
+
 function findStore() {
   const address = document.getElementById('addressInput').value.trim();
   return setDeliveryAddress(address);
@@ -768,8 +800,112 @@ function getStateSnapshot() {
   };
 }
 
+// ============ URL STATE MANAGEMENT ============
+const STEP_PATHS = {
+  1: '/',
+  2: '/location',
+  3: '/menu',
+  4: '/pizzas',
+  5: '/customize',
+  6: '/cart',
+  7: '/checkout',
+  8: '/confirmation'
+};
+
+const PATH_TO_STEP = {
+  '/': 1,
+  '/location': 2,
+  '/menu': 3,
+  '/pizzas': 4,
+  '/customize': 5,
+  '/cart': 6,
+  '/checkout': 7,
+  '/confirmation': 8
+};
+
+function updateURL() {
+  const path = STEP_PATHS[currentStep] || '/';
+  const params = new URLSearchParams();
+  
+  if (orderState.orderType) {
+    params.set('orderType', orderState.orderType);
+  }
+  
+  if (orderState.address) {
+    params.set('address', orderState.address);
+  }
+  
+  if (orderState.currentCategory) {
+    params.set('category', orderState.currentCategory);
+  }
+  
+  if (orderState.selectedPizza) {
+    params.set('pizza', orderState.selectedPizza.id);
+  }
+  
+  if (orderState.cart.length > 0) {
+    params.set('cartItems', orderState.cart.length);
+  }
+  
+  const search = params.toString();
+  const url = search ? `${path}?${search}` : path;
+  history.pushState({ step: currentStep, orderState: JSON.parse(JSON.stringify(orderState)) }, '', url);
+}
+
+function restoreFromURL() {
+  const path = window.location.pathname;
+  const params = new URLSearchParams(window.location.search);
+  const step = PATH_TO_STEP[path] || 1;
+  
+  // Restore order state from URL
+  if (params.has('orderType')) {
+    orderState.orderType = params.get('orderType');
+  }
+  
+  if (params.has('address')) {
+    orderState.address = params.get('address');
+    orderState.store = STORE;
+  }
+  
+  if (params.has('category')) {
+    orderState.currentCategory = params.get('category');
+  }
+  
+  if (params.has('pizza')) {
+    const pizzaId = params.get('pizza');
+    orderState.selectedPizza = PIZZAS.find(p => p.id === pizzaId);
+  }
+  
+  // Go to the step from URL (skip history update since we're restoring)
+  goToStep(step, true);
+}
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', (event) => {
+  if (event.state && event.state.step) {
+    // Restore state from history
+    if (event.state.orderState) {
+      Object.assign(orderState, event.state.orderState);
+    }
+    goToStep(event.state.step, true);
+  } else {
+    // No state, restore from URL params
+    restoreFromURL();
+  }
+});
+
+function goToHome() {
+  startNewOrder();
+}
+
 // ============ INIT ============
 // Start on Step 1 — register tools once webmcp-tools.js loads
 document.addEventListener('DOMContentLoaded', () => {
-  goToStep(1);
+  // Check if there's a path indicating a specific step, otherwise start at step 1
+  const path = window.location.pathname;
+  if (path !== '/' && PATH_TO_STEP[path]) {
+    restoreFromURL();
+  } else {
+    goToStep(1);
+  }
 });
