@@ -13,10 +13,16 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
 });
 
-// Update badge with tool count
-chrome.tabs.onActivated.addListener(({ tabId }) => updateBadge(tabId));
+// Update badge with tool count and notify sidebar
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  updateBadge(tabId);
+  chrome.runtime.sendMessage({ type: 'TAB_ACTIVATED', tabId }).catch(() => {});
+});
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === 'complete') updateBadge(tabId);
+  if (changeInfo.status === 'complete') {
+    updateBadge(tabId);
+    chrome.runtime.sendMessage({ type: 'TAB_ACTIVATED', tabId }).catch(() => {});
+  }
 });
 
 async function updateBadge(tabId) {

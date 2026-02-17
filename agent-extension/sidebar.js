@@ -344,6 +344,8 @@ chrome.runtime.onMessage.addListener((msg) => {
     currentTools = msg.tools || [];
     renderToolsList();
     renderToolSelect();
+  } else if (msg.type === 'TAB_ACTIVATED') {
+    refreshTools();
   }
 });
 
