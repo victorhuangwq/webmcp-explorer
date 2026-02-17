@@ -60,15 +60,21 @@ async function loadSettings() {
 }
 
 saveSettingsBtn.onclick = async () => {
-  await saveSettings({
-    endpoint: settingsEndpoint.value.trim(),
-    apiKey: settingsApiKey.value.trim(),
-    deploymentName: settingsDeployment.value.trim(),
-    apiVersion: settingsApiVersion.value.trim() || '2024-12-01-preview',
-  });
-  await updateAgentButtonState();
-  settingsStatus.textContent = '✓ Settings saved';
-  setTimeout(() => (settingsStatus.textContent = ''), 2000);
+  try {
+    await saveSettings({
+      endpoint: settingsEndpoint.value.trim(),
+      apiKey: settingsApiKey.value.trim(),
+      deploymentName: settingsDeployment.value.trim(),
+      apiVersion: settingsApiVersion.value.trim() || '2024-12-01-preview',
+    });
+    await updateAgentButtonState();
+    settingsStatus.textContent = '✓ Settings saved';
+    settingsStatus.style.color = '';
+  } catch (err) {
+    settingsStatus.textContent = `✗ ${err.message}`;
+    settingsStatus.style.color = '#dc2626';
+  }
+  setTimeout(() => { settingsStatus.textContent = ''; settingsStatus.style.color = ''; }, 3000);
 };
 
 maxIterationsInput.oninput = () => {

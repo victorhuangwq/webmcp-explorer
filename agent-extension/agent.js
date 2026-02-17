@@ -28,10 +28,15 @@ export async function getSettings() {
 
 /**
  * Save Azure OpenAI settings to chrome.storage.local.
+ * Validates that the endpoint uses HTTPS.
  */
 export async function saveSettings({ endpoint, apiKey, deploymentName, apiVersion }) {
+  const trimmedEndpoint = (endpoint || '').trim();
+  if (trimmedEndpoint && !trimmedEndpoint.startsWith('https://')) {
+    throw new Error('Endpoint must use HTTPS (e.g., https://your-resource.openai.azure.com)');
+  }
   await chrome.storage.local.set({
-    [SETTINGS_KEYS.endpoint]: endpoint || '',
+    [SETTINGS_KEYS.endpoint]: trimmedEndpoint,
     [SETTINGS_KEYS.apiKey]: apiKey || '',
     [SETTINGS_KEYS.deploymentName]: deploymentName || '',
     [SETTINGS_KEYS.apiVersion]: apiVersion || DEFAULTS.apiVersion,

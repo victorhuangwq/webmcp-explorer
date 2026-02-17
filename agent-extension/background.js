@@ -18,6 +18,7 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
   updateBadge(tabId);
   chrome.runtime.sendMessage({ type: 'TAB_ACTIVATED', tabId }).catch(() => {});
 });
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'complete') {
     updateBadge(tabId);
