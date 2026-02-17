@@ -29,21 +29,16 @@ From [Azure AI Foundry](https://ai.azure.com/), grab:
 
 ## Installation
 
-1. Clone this repo and navigate to `agent-extension/`:
-   ```bash
-   cd agent-extension
-   npm install
-   ```
-   This installs the OpenAI SDK and bundles it for browser use.
-
-2. Load the extension in your browser:
+1. Load the extension in your browser:
    - Go to `edge://extensions` (or `chrome://extensions`)
    - Enable **Developer mode**
    - Click **Load unpacked** and select the `agent-extension/` folder
 
-3. Click the extension icon in the toolbar to open the side panel.
+2. Click the extension icon in the toolbar to open the side panel.
 
-4. Go to the **⚙️ Settings** tab and enter your Azure OpenAI credentials.
+3. Go to the **⚙️ Settings** tab and enter your Azure OpenAI credentials.
+
+> **Note:** The OpenAI SDK is pre-bundled as `openai-bundle.js`. If you need to regenerate it (e.g., after upgrading the SDK version), run `npm install` in the `agent-extension/` directory.
 
 ## Try it out
 

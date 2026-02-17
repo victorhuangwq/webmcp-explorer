@@ -1,4 +1,4 @@
-# Pizza Order Demo — Imperative WebMCP Implementation
+# Pizza Order Demo (Imperative WebMCP Implementation)
 
 A demo site implementing the [imperative version of WebMCP](https://github.com/webmachinelearning/webmcp), a browser API that enables AI agents to discover and interact with tools exposed by web pages. This example demonstrates a 7-step pizza ordering wizard where tools are dynamically registered based on each step of the user journey.
 
