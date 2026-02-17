@@ -65,7 +65,7 @@ saveSettingsBtn.onclick = async () => {
       endpoint: settingsEndpoint.value.trim(),
       apiKey: settingsApiKey.value.trim(),
       deploymentName: settingsDeployment.value.trim(),
-      apiVersion: settingsApiVersion.value.trim() || '2024-12-01-preview',
+      apiVersion: settingsApiVersion.value.trim() || '2025-03-01-preview',
     });
     await updateAgentButtonState();
     settingsStatus.textContent = '✓ Settings saved';

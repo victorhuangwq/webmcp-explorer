@@ -11,7 +11,7 @@ const SETTINGS_KEYS = {
   apiVersion: 'aoai_apiVersion',
 };
 
-const DEFAULTS = { endpoint: '', apiKey: '', deploymentName: '', apiVersion: '2024-12-01-preview' };
+const DEFAULTS = { endpoint: '', apiKey: '', deploymentName: '', apiVersion: '2025-03-01-preview' };
 
 /**
  * Get stored Azure OpenAI settings from chrome.storage.local.
