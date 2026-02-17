@@ -1,6 +1,125 @@
-// agent.js — Autonomous agent loop over WebMCP tools
+// agent.js — Autonomous agent loop over WebMCP tools with Azure OpenAI
 
-import * as llm from './llm.js';
+import { AzureOpenAI } from './openai-bundle.js';
+
+// ============ SETTINGS ============
+
+/**
+ * Get stored Azure OpenAI settings from localStorage.
+ */
+export function getSettings() {
+  return {
+    endpoint: localStorage.getItem('aoai_endpoint') || '',
+    apiKey: localStorage.getItem('aoai_apiKey') || '',
+    deploymentName: localStorage.getItem('aoai_deployment') || '',
+    apiVersion: localStorage.getItem('aoai_apiVersion') || '2024-12-01-preview',
+  };
+}
+
+/**
+ * Save Azure OpenAI settings to localStorage.
+ */
+export function saveSettings({ endpoint, apiKey, deploymentName, apiVersion }) {
+  localStorage.setItem('aoai_endpoint', endpoint || '');
+  localStorage.setItem('aoai_apiKey', apiKey || '');
+  localStorage.setItem('aoai_deployment', deploymentName || '');
+  localStorage.setItem('aoai_apiVersion', apiVersion || '2024-12-01-preview');
+}
+
+/**
+ * Check if Azure OpenAI is configured.
+ */
+export function isConfigured() {
+  const s = getSettings();
+  return !!(s.endpoint && s.apiKey && s.deploymentName);
+}
+
+// ============ AZURE OPENAI CLIENT ============
+
+/**
+ * Create an AzureOpenAI client from stored settings.
+ */
+function createClient() {
+  const s = getSettings();
+  if (!s.endpoint || !s.apiKey || !s.deploymentName) {
+    throw new Error('Azure OpenAI not configured. Set endpoint, API key, and deployment name.');
+  }
+  return new AzureOpenAI({
+    endpoint: s.endpoint,
+    apiKey: s.apiKey,
+    apiVersion: s.apiVersion,
+    dangerouslyAllowBrowser: true,
+  });
+}
+
+/**
+ * Convert WebMCP tool definitions to OpenAI function calling format.
+ */
+function convertToolsToOpenAI(webmcpTools) {
+  return webmcpTools.map((tool) => {
+    let parameters = { type: 'object', properties: {} };
+    if (tool.inputSchema) {
+      try {
+        parameters = typeof tool.inputSchema === 'string'
+          ? JSON.parse(tool.inputSchema)
+          : tool.inputSchema;
+      } catch {}
+    }
+    return {
+      type: 'function',
+      function: {
+        name: tool.name,
+        description: tool.description || '',
+        parameters,
+      },
+    };
+  });
+}
+
+/**
+ * Send a chat completion request to Azure OpenAI.
+ */
+async function sendMessage(messages, tools = []) {
+  const client = createClient();
+  const s = getSettings();
+
+  const requestParams = {
+    model: s.deploymentName,
+    messages,
+  };
+
+  if (tools.length > 0) {
+    requestParams.tools = convertToolsToOpenAI(tools);
+    requestParams.tool_choice = 'auto';
+  }
+
+  const response = await client.chat.completions.create(requestParams);
+  const choice = response.choices[0];
+
+  if (!choice) {
+    throw new Error('No response from Azure OpenAI');
+  }
+
+  const message = choice.message;
+
+  if (message.tool_calls && message.tool_calls.length > 0) {
+    return {
+      toolCalls: message.tool_calls.map((tc) => ({
+        id: tc.id,
+        name: tc.function.name,
+        arguments: tc.function.arguments,
+      })),
+      rawMessage: message,
+    };
+  }
+
+  return {
+    text: message.content || '',
+    rawMessage: message,
+  };
+}
+
+// ============ AGENT LOOP ============
 
 const SYSTEM_PROMPT = `You are a browser automation agent. You interact with web pages by calling WebMCP tools exposed by the page.
 
@@ -98,12 +217,12 @@ export async function runAgent(goal, options = {}) {
         }).join('\n'),
     };
 
-    // 3. Send to LLM
+    // 3. Send to Azure OpenAI
     onStep({ type: 'llm_request', data: { iteration, messageCount: messages.length } });
 
     let response;
     try {
-      response = await llm.sendMessage(messages, tools);
+      response = await sendMessage(messages, tools);
     } catch (err) {
       onStep({ type: 'error', data: { iteration, error: err.message } });
       return;

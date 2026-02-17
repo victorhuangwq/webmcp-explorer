@@ -1,7 +1,6 @@
 // sidebar.js — Side panel controller for WebMCP Agent Extension
 
-import * as llm from './llm.js';
-import { runAgent, listTools, executeTool } from './agent.js';
+import { runAgent, listTools, executeTool, saveSettings, isConfigured, getSettings } from './agent.js';
 
 // ============ DOM REFS ============
 const toolSelect = document.getElementById('toolSelect');
@@ -49,7 +48,7 @@ document.querySelectorAll('.tab').forEach((tab) => {
 
 // ============ SETTINGS ============
 function loadSettings() {
-  const s = llm.getSettings();
+  const s = getSettings();
   settingsEndpoint.value = s.endpoint;
   settingsApiKey.value = s.apiKey;
   settingsDeployment.value = s.deploymentName;
@@ -59,7 +58,7 @@ function loadSettings() {
 }
 
 saveSettingsBtn.onclick = () => {
-  llm.saveSettings({
+  saveSettings({
     endpoint: settingsEndpoint.value.trim(),
     apiKey: settingsApiKey.value.trim(),
     deploymentName: settingsDeployment.value.trim(),
@@ -175,8 +174,8 @@ executeBtn.onclick = async () => {
 
 // ============ AGENT LOOP ============
 function updateAgentButtonState() {
-  runBtn.disabled = !llm.isConfigured();
-  if (!llm.isConfigured()) {
+  runBtn.disabled = !isConfigured();
+  if (!isConfigured()) {
     runBtn.title = 'Configure Azure OpenAI in Settings first';
   } else {
     runBtn.title = '';
