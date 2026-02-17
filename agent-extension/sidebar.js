@@ -48,31 +48,32 @@ document.querySelectorAll('.tab').forEach((tab) => {
 });
 
 // ============ SETTINGS ============
-function loadSettings() {
-  const s = getSettings();
+async function loadSettings() {
+  const s = await getSettings();
   settingsEndpoint.value = s.endpoint;
   settingsApiKey.value = s.apiKey;
   settingsDeployment.value = s.deploymentName;
   settingsApiVersion.value = s.apiVersion;
-  maxIterationsInput.value = localStorage.getItem('agent_maxIterations') || '20';
+  const stored = await chrome.storage.local.get('agent_maxIterations');
+  maxIterationsInput.value = stored.agent_maxIterations || '20';
   maxIterationsValue.textContent = maxIterationsInput.value;
 }
 
-saveSettingsBtn.onclick = () => {
-  saveSettings({
+saveSettingsBtn.onclick = async () => {
+  await saveSettings({
     endpoint: settingsEndpoint.value.trim(),
     apiKey: settingsApiKey.value.trim(),
     deploymentName: settingsDeployment.value.trim(),
     apiVersion: settingsApiVersion.value.trim() || '2024-12-01-preview',
   });
-  updateAgentButtonState();
+  await updateAgentButtonState();
   settingsStatus.textContent = '✓ Settings saved';
   setTimeout(() => (settingsStatus.textContent = ''), 2000);
 };
 
 maxIterationsInput.oninput = () => {
   maxIterationsValue.textContent = maxIterationsInput.value;
-  localStorage.setItem('agent_maxIterations', maxIterationsInput.value);
+  chrome.storage.local.set({ agent_maxIterations: maxIterationsInput.value });
 };
 
 loadSettings();
@@ -174,8 +175,8 @@ executeBtn.onclick = async () => {
 };
 
 // ============ AGENT LOOP ============
-function updateAgentButtonState() {
-  const configured = isConfigured();
+async function updateAgentButtonState() {
+  const configured = await isConfigured();
   runBtn.disabled = !configured;
   stepBtn.disabled = !configured;
   if (!configured) {
@@ -222,7 +223,7 @@ async function startAgent(singleTurn) {
   stopBtn.disabled = true;
   goalInput.disabled = false;
   approvalPanel.style.display = 'none';
-  updateAgentButtonState();
+  await updateAgentButtonState();
 
   // Refresh tools after execution (page state may have changed)
   if (singleTurn) setTimeout(refreshTools, 500);

@@ -4,33 +4,45 @@ import { AzureOpenAI } from './openai-bundle.js';
 
 // ============ SETTINGS ============
 
+const SETTINGS_KEYS = {
+  endpoint: 'aoai_endpoint',
+  apiKey: 'aoai_apiKey',
+  deploymentName: 'aoai_deployment',
+  apiVersion: 'aoai_apiVersion',
+};
+
+const DEFAULTS = { endpoint: '', apiKey: '', deploymentName: '', apiVersion: '2024-12-01-preview' };
+
 /**
- * Get stored Azure OpenAI settings from localStorage.
+ * Get stored Azure OpenAI settings from chrome.storage.local.
  */
-export function getSettings() {
+export async function getSettings() {
+  const result = await chrome.storage.local.get(Object.values(SETTINGS_KEYS));
   return {
-    endpoint: localStorage.getItem('aoai_endpoint') || '',
-    apiKey: localStorage.getItem('aoai_apiKey') || '',
-    deploymentName: localStorage.getItem('aoai_deployment') || '',
-    apiVersion: localStorage.getItem('aoai_apiVersion') || '2024-12-01-preview',
+    endpoint: result[SETTINGS_KEYS.endpoint] || DEFAULTS.endpoint,
+    apiKey: result[SETTINGS_KEYS.apiKey] || DEFAULTS.apiKey,
+    deploymentName: result[SETTINGS_KEYS.deploymentName] || DEFAULTS.deploymentName,
+    apiVersion: result[SETTINGS_KEYS.apiVersion] || DEFAULTS.apiVersion,
   };
 }
 
 /**
- * Save Azure OpenAI settings to localStorage.
+ * Save Azure OpenAI settings to chrome.storage.local.
  */
-export function saveSettings({ endpoint, apiKey, deploymentName, apiVersion }) {
-  localStorage.setItem('aoai_endpoint', endpoint || '');
-  localStorage.setItem('aoai_apiKey', apiKey || '');
-  localStorage.setItem('aoai_deployment', deploymentName || '');
-  localStorage.setItem('aoai_apiVersion', apiVersion || '2024-12-01-preview');
+export async function saveSettings({ endpoint, apiKey, deploymentName, apiVersion }) {
+  await chrome.storage.local.set({
+    [SETTINGS_KEYS.endpoint]: endpoint || '',
+    [SETTINGS_KEYS.apiKey]: apiKey || '',
+    [SETTINGS_KEYS.deploymentName]: deploymentName || '',
+    [SETTINGS_KEYS.apiVersion]: apiVersion || DEFAULTS.apiVersion,
+  });
 }
 
 /**
  * Check if Azure OpenAI is configured.
  */
-export function isConfigured() {
-  const s = getSettings();
+export async function isConfigured() {
+  const s = await getSettings();
   return !!(s.endpoint && s.apiKey && s.deploymentName);
 }
 
@@ -39,8 +51,8 @@ export function isConfigured() {
 /**
  * Create an AzureOpenAI client from stored settings.
  */
-function createClient() {
-  const s = getSettings();
+async function createClient() {
+  const s = await getSettings();
   if (!s.endpoint || !s.apiKey || !s.deploymentName) {
     throw new Error('Azure OpenAI not configured. Set endpoint, API key, and deployment name.');
   }
@@ -81,8 +93,8 @@ function convertToolsToOpenAI(webmcpTools) {
  * @param {string|null} previousResponseId - Previous response ID for chaining
  */
 async function sendMessage(input, tools = [], previousResponseId = null) {
-  const client = createClient();
-  const s = getSettings();
+  const client = await createClient();
+  const s = await getSettings();
 
   const requestParams = {
     model: s.deploymentName,
@@ -229,8 +241,8 @@ export async function runAgent(goal, options = {}) {
     let response;
     try {
       // Pass instructions as a top-level param; input carries the user/tool messages
-      const client = createClient();
-      const s = getSettings();
+      const client = await createClient();
+      const s = await getSettings();
 
       const requestParams = {
         model: s.deploymentName,
