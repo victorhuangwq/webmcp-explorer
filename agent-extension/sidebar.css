@@ -181,11 +181,11 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-/* Toggle */
+/* Toggle switch */
 .toggle-label {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 12px;
   font-weight: 600;
   color: #444;
@@ -193,8 +193,56 @@ button:disabled {
   margin-left: auto;
 }
 
-.toggle-label input[type="checkbox"] {
-  width: auto;
+.toggle-text {
+  user-select: none;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #d1d5db;
+  border-radius: 9px;
+  transition: background 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #2563eb;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(14px);
+}
+
+.toggle-switch input:focus-visible + .toggle-slider {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
 }
 
 /* Output areas */
@@ -339,4 +387,8 @@ select:disabled, textarea:disabled, input:disabled {
 
   .secondary { color: #60a5fa; outline-color: #60a5fa; }
   .secondary:hover { color: #93c5fd; outline-color: #93c5fd; background: rgba(59,130,246,0.1); }
+
+  .toggle-label { color: #ccc; }
+  .toggle-slider { background: #404040; }
+  .toggle-switch input:checked + .toggle-slider { background: #3b82f6; }
 }

@@ -11,6 +11,7 @@ const toolsList = document.getElementById('toolsList');
 
 const goalInput = document.getElementById('goalInput');
 const runBtn = document.getElementById('runBtn');
+const stepBtn = document.getElementById('stepBtn');
 const stopBtn = document.getElementById('stopBtn');
 const resetBtn = document.getElementById('resetBtn');
 const autoApproveToggle = document.getElementById('autoApproveToggle');
@@ -174,33 +175,39 @@ executeBtn.onclick = async () => {
 
 // ============ AGENT LOOP ============
 function updateAgentButtonState() {
-  runBtn.disabled = !isConfigured();
-  if (!isConfigured()) {
+  const configured = isConfigured();
+  runBtn.disabled = !configured;
+  stepBtn.disabled = !configured;
+  if (!configured) {
     runBtn.title = 'Configure Azure OpenAI in Settings first';
+    stepBtn.title = 'Configure Azure OpenAI in Settings first';
   } else {
     runBtn.title = '';
+    stepBtn.title = '';
   }
 }
 
 updateAgentButtonState();
 
-runBtn.onclick = async () => {
+async function startAgent(singleTurn) {
   const goal = goalInput.value.trim();
   if (!goal) return;
 
   runBtn.disabled = true;
+  stepBtn.disabled = true;
   stopBtn.disabled = false;
   goalInput.disabled = true;
-  agentLog.textContent = '';
+  if (!singleTurn) agentLog.textContent = '';
 
   abortController = new AbortController();
 
-  const maxIter = parseInt(maxIterationsInput.value) || 20;
+  const maxIter = singleTurn ? 1 : (parseInt(maxIterationsInput.value) || 20);
   const autoApprove = autoApproveToggle.checked;
 
   try {
     await runAgent(goal, {
       autoApprove,
+      singleTurn,
       maxIterations: maxIter,
       signal: abortController.signal,
       onStep: handleAgentStep,
@@ -211,11 +218,18 @@ runBtn.onclick = async () => {
   }
 
   runBtn.disabled = false;
+  stepBtn.disabled = false;
   stopBtn.disabled = true;
   goalInput.disabled = false;
   approvalPanel.style.display = 'none';
   updateAgentButtonState();
-};
+
+  // Refresh tools after execution (page state may have changed)
+  if (singleTurn) setTimeout(refreshTools, 500);
+}
+
+runBtn.onclick = () => startAgent(false);
+stepBtn.onclick = () => startAgent(true);
 
 stopBtn.onclick = () => {
   if (abortController) {

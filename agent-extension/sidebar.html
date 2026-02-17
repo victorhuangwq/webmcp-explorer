@@ -53,12 +53,16 @@
           <textarea id="goalInput" placeholder="e.g., Order a large pepperoni pizza for delivery to 1 Microsoft Way, Redmond, WA 98052"></textarea>
         </div>
         <div class="form-group button-row">
-          <button id="runBtn">▶ Run</button>
+          <button id="stepBtn">▶ Step</button>
+          <button id="runBtn">▶▶ Run</button>
           <button id="stopBtn" class="secondary" disabled>⏹ Stop</button>
           <button id="resetBtn" class="secondary">↺ Reset</button>
-          <label class="toggle-label">
-            <input type="checkbox" id="autoApproveToggle" checked>
-            Auto-approve
+          <label class="toggle-label" title="Auto-approve tool calls without confirmation">
+            <span class="toggle-text">Auto-approve</span>
+            <span class="toggle-switch">
+              <input type="checkbox" id="autoApproveToggle" checked>
+              <span class="toggle-slider"></span>
+            </span>
           </label>
         </div>
       </div>

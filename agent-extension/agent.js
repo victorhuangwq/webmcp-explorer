@@ -175,6 +175,7 @@ function settle(ms = 500) {
  * @param {string} goal - The user's high-level goal
  * @param {object} options
  * @param {boolean} options.autoApprove - If false, pause before each tool call
+ * @param {boolean} options.singleTurn - If true, stop after the first tool call round
  * @param {number} options.maxIterations - Safety limit (default 20)
  * @param {function} options.onStep - Callback for each step: ({ type, data })
  * @param {function} options.waitForApproval - Async function that resolves when user approves
@@ -184,6 +185,7 @@ function settle(ms = 500) {
 export async function runAgent(goal, options = {}) {
   const {
     autoApprove = true,
+    singleTurn = false,
     maxIterations = 20,
     onStep = () => {},
     waitForApproval = async () => {},
@@ -355,6 +357,12 @@ export async function runAgent(goal, options = {}) {
 
       // Next turn: send tool outputs as input, chained via previous_response_id
       input = toolOutputs;
+
+      // In single-turn mode, stop after executing the first round of tool calls
+      if (singleTurn) {
+        onStep({ type: 'completed', data: { iteration, reason: 'Single-turn mode — stopping after first tool call.' } });
+        return;
+      }
     }
   }
 
