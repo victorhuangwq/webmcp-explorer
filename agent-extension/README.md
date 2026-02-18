@@ -62,7 +62,7 @@ We recommend testing with the **Checkers Pizza** demo site:
 | **▶▶ Run** | Run the full agent loop until the goal is achieved or max iterations reached |
 | **⏹ Stop** | Abort the current run |
 | **↺ Reset** | Clear the log and goal |
-| **Auto-approve** | When ON, tool calls execute without confirmation. OFF by default for safety. |
+| **Auto-approve** | When ON, tool calls execute without confirmation. ON by default. |
 
 ## ⚠️ Caveats
 
