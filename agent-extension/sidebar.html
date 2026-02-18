@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebMCP Explorer</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Tab bar -->
+    <div class="tab-bar">
+      <button class="tab active" data-tab="tools">🔧 Tools</button>
+      <button class="tab" data-tab="agent">🤖 Agent</button>
+      <button class="tab" data-tab="settings">⚙️ Config</button>
+    </div>
+
+    <!-- Tools tab: manual execution -->
+    <div class="tab-content active" id="tab-tools">
+      <div class="section">
+        <div class="section-header">Available Tools</div>
+        <div id="toolsList" class="tools-list">
+          <span class="muted">No tools detected.</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Execute Tool</div>
+        <div class="form-group">
+          <label for="toolSelect">Tool</label>
+          <select id="toolSelect" disabled>
+            <option value="">— no tools —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="toolArgs">Arguments (JSON)</label>
+          <textarea id="toolArgs" disabled>{}</textarea>
+        </div>
+        <div class="form-group">
+          <button id="executeBtn" disabled>Execute</button>
+        </div>
+        <div class="form-group">
+          <label>Result</label>
+          <pre id="toolResult" class="output"></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent tab: autonomous loop -->
+    <div class="tab-content" id="tab-agent">
+      <div class="section">
+        <div class="form-group">
+          <label for="goalInput">Goal</label>
+          <textarea id="goalInput" placeholder="e.g., Order a large pepperoni pizza for delivery to 1 Microsoft Way, Redmond, WA 98052"></textarea>
+        </div>
+        <div class="form-group button-row">
+          <button id="stepBtn">▶ Step</button>
+          <button id="runBtn">▶▶ Run</button>
+          <button id="stopBtn" class="secondary" disabled>⏹ Stop</button>
+          <button id="resetBtn" class="secondary">↺ Reset</button>
+          <label class="toggle-label" title="Auto-approve tool calls without confirmation">
+            <span class="toggle-text">Auto-approve</span>
+            <span class="toggle-switch">
+              <input type="checkbox" id="autoApproveToggle">
+              <span class="toggle-slider"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Execution Log</div>
+        <div id="agentLog" class="output agent-log"></div>
+      </div>
+
+      <!-- User reply input -->
+      <div id="userReplyPanel" class="user-reply-panel" style="display:none;">
+        <div id="userReplyQuestion" class="user-reply-question"></div>
+        <div class="user-reply-row">
+          <textarea id="userReplyInput" placeholder="Type your reply..." rows="2"></textarea>
+          <button id="userReplyBtn">Send</button>
+        </div>
+      </div>
+
+      <!-- Approval overlay -->
+      <div id="approvalPanel" class="approval-panel" style="display:none;">
+        <div class="approval-header">Approve tool call?</div>
+        <div id="approvalDetails" class="approval-details"></div>
+        <div class="button-row">
+          <button id="approveBtn">✓ Approve</button>
+          <button id="skipBtn" class="secondary">⊘ Skip</button>
+          <button id="abortBtn" class="danger">⏹ Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings tab -->
+    <div class="tab-content" id="tab-settings">
+      <div class="section">
+        <div class="section-header">Azure OpenAI</div>
+        <div class="form-group">
+          <label for="settingsEndpoint">Endpoint</label>
+          <input id="settingsEndpoint" type="text" placeholder="https://your-resource.openai.azure.com">
+        </div>
+        <div class="form-group">
+          <label for="settingsApiKey">API Key</label>
+          <input id="settingsApiKey" type="password" placeholder="Your API key">
+        </div>
+        <div class="form-group">
+          <label for="settingsDeployment">Deployment Name</label>
+          <input id="settingsDeployment" type="text" placeholder="gpt-4o">
+        </div>
+        <div class="form-group">
+          <label for="settingsApiVersion">API Version</label>
+          <input id="settingsApiVersion" type="text" placeholder="2025-03-01-preview">
+        </div>
+        <div class="form-group">
+          <button id="saveSettingsBtn">Save Settings</button>
+        </div>
+        <div id="settingsStatus" class="muted"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">Agent Options</div>
+        <div class="form-group">
+          <label for="maxIterations">Max Iterations: <span id="maxIterationsValue">20</span></label>
+          <input id="maxIterations" type="range" min="1" max="50" value="20">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="sidebar.js"></script>
+</body>
+</html>

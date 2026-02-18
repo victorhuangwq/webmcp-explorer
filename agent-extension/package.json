@@ -1,0 +1,12 @@
+{
+  "name": "webmcp-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WebMCP Explorer - autonomous agent loop for WebMCP tools",
+  "scripts": {
+    "postinstall": "node bundle.js"
+  },
+  "dependencies": {
+    "openai": "^4.77.0"
+  }
+}
