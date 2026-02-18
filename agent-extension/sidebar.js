@@ -256,12 +256,19 @@ stopBtn.onclick = () => {
     approvalResolver(false);
     approvalResolver = null;
   }
+  // Also reject any pending user reply
+  if (userReplyResolver) {
+    userReplyResolver('');
+    userReplyResolver = null;
+  }
+  userReplyPanel.style.display = 'none';
 };
 
 resetBtn.onclick = () => {
   agentLog.textContent = '';
   goalInput.value = '';
   approvalPanel.style.display = 'none';
+  userReplyPanel.style.display = 'none';
   if (abortController) {
     abortController.abort();
     abortController = null;

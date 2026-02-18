@@ -288,7 +288,7 @@ export async function runAgent(goal, options = {}) {
         requestParams.previous_response_id = previousResponseId;
       }
 
-      const apiResponse = await client.responses.create(requestParams);
+      const apiResponse = await client.responses.create(requestParams, { signal });
 
       if (!apiResponse.output || apiResponse.output.length === 0) {
         throw new Error('No response from Azure OpenAI');
@@ -313,6 +313,10 @@ export async function runAgent(goal, options = {}) {
         };
       }
     } catch (err) {
+      if (signal?.aborted) {
+        onStep({ type: 'aborted', data: { iteration } });
+        return;
+      }
       onStep({ type: 'error', data: { iteration, error: err.message } });
       return;
     }
