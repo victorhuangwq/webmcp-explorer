@@ -10,12 +10,34 @@ A browser extension that lets an AI agent interact with web pages through the [W
 
 ### 1. Azure OpenAI (AI Foundry)
 
-You need an Azure OpenAI resource with a deployed model (e.g., `gpt-4o`).
-
+You need an Azure OpenAI resource with a deployed model. Currently only tested with `gpt-5.2-chat`.
+ 
 From [Azure AI Foundry](https://ai.azure.com/), grab:
-- **Endpoint** - `https://your-resource.openai.azure.com`
-- **API Key** - from the Keys & Endpoint section
-- **Deployment Name** - the name of your model deployment
+- **Endpoint** - from Endpoint section, called "Target URI" (e.g. `https://your-resource.azure.com/openai/...`)
+- **API Key** - from the Endpoint section, called "Key"
+- **Deployment Name** - from Deployment info section, called "name" (e.g., `gpt-5.2-chat`)
+
+<details>
+<summary>New to Azure? Click here for step-by-step setup instructions.</summary>
+
+**1. Create an Azure Account**
+
+If you don't have an Azure subscription:
+- **Microsoft Employees**: Follow the [internal instructions](https://microsoft.sharepoint.com/teams/DataAISpecialistCommunity/Shared%20Documents/Forms/AllItems.aspx?id=%2Fteams%2FDataAISpecialistCommunity%2FShared%20Documents%2FFY23%20LP%20Content%2FHow%20to%20Activate%20%24150%20Azure%20Visual%20Studio%20Subscription%20Benefit%20%2D%20May%202020%2Epdf&parent=%2Fteams%2FDataAISpecialistCommunity%2FShared%20Documents%2FFY23%20LP%20Content) to activate your benefit.
+- **Others**: The [Azure free account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account) includes $200 credit for 30 days (as of Feb 2026), sufficient for testing.
+
+**2. Deploy the Model**
+
+1. Go to [Azure AI Foundry](https://ai.azure.com/).
+2. Click **"Create an agent"**.
+3. Name your project (creation may take a moment).
+4. When the **"Deploy model"** step appears, click **"Go to model catalog"** to see more options.
+5. Select `gpt-5.2-chat` from the catalog.
+6. Click **"Use this model"**.
+7. Keep the default settings and click **"Create resource and deploy"**.
+8. Once deployed, copy the **Endpoint**, **API Key**, and **Deployment Name** from the resource page.
+
+</details>
 
 ### 2. Browser with WebMCP support
 
