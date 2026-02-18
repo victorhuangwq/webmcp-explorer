@@ -51,10 +51,12 @@ If you don't have an Azure subscription:
 
 ## Installation
 
+1. Clone this repository into a local directory.
+
 1. Load the extension in your browser:
    - Go to `edge://extensions` (or `chrome://extensions`)
    - Enable **Developer mode**
-   - Click **Load unpacked** and select the `agent-extension/` folder
+   - Click **Load unpacked** and select the `agent-extension/` folder in this repository
 
 2. Click the extension icon in the toolbar to open the side panel.
 
@@ -74,7 +76,7 @@ We recommend testing with the **Checkers Pizza** demo site:
 4. Switch to the **🤖 Agent** tab
 5. Enter a goal, e.g.:
    > Order a large pepperoni pizza for delivery to 1 Microsoft Way, Redmond, WA 98052
-6. Click **▶ Step** to execute one tool call at a time, or **▶▶ Run** for the full loop
+6. Click  **▶▶ Run** for the full loop, or **▶ Step** to execute one tool call at a time
 
 ## Controls
 
