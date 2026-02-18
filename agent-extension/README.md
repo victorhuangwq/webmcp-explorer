@@ -4,7 +4,7 @@
 
 ## What is this?
 
-A browser extension that lets an AI agent interact with web pages through the [WebMCP API](https://github.com/nicolo-ribaudo/webmcp-explainer). The agent discovers tools exposed by a page and calls them autonomously to complete a user-defined goal.
+A browser extension that lets an AI agent interact with web pages through the [WebMCP API](https://github.com/webmachinelearning/webmcp). The agent discovers tools exposed by a page and calls them autonomously to complete a user-defined goal.
 
 ## Prerequisites
 
