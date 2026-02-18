@@ -1,6 +1,6 @@
-# WebMCP Explorer — Chrome/Edge Extension
+# WebMCP Explorer - Chrome/Edge Extension
 
-> ⚠️ **Experimental Preview** — This extension is for developer testing only. Not intended for production use. Only use on sites you trust.
+> ⚠️ **Experimental Preview** - This extension is for developer testing only. Not intended for production use. Only use on sites you trust.
 
 ## What is this?
 
@@ -13,9 +13,9 @@ A browser extension that lets an AI agent interact with web pages through the [W
 You need an Azure OpenAI resource with a deployed model (e.g., `gpt-4o`).
 
 From [Azure AI Foundry](https://ai.azure.com/), grab:
-- **Endpoint** — `https://your-resource.openai.azure.com`
-- **API Key** — from the Keys & Endpoint section
-- **Deployment Name** — the name of your model deployment
+- **Endpoint** - `https://your-resource.openai.azure.com`
+- **API Key** - from the Keys & Endpoint section
+- **Deployment Name** - the name of your model deployment
 
 ### 2. Browser with WebMCP support
 
@@ -48,7 +48,7 @@ We recommend testing with the **Checkers Pizza** demo site:
 
 1. Open the pizza site in a tab
 2. Open the extension side panel (click the extension icon)
-3. Go to the **🔧 Tools** tab — you should see tools like `select-order-type`
+3. Go to the **🔧 Tools** tab - you should see tools like `select-order-type`
 4. Switch to the **🤖 Agent** tab
 5. Enter a goal, e.g.:
    > Order a large pepperoni pizza for delivery to 1 Microsoft Way, Redmond, WA 98052
@@ -58,7 +58,7 @@ We recommend testing with the **Checkers Pizza** demo site:
 
 | Button | Behavior |
 |--------|----------|
-| **▶ Step** | Run one iteration (discover tools → LLM → execute one tool call → stop) |
+| **▶ Step** | Run one iteration (discover tools > LLM > execute one tool call > stop) |
 | **▶▶ Run** | Run the full agent loop until the goal is achieved or max iterations reached |
 | **⏹ Stop** | Abort the current run |
 | **↺ Reset** | Clear the log and goal |
@@ -66,7 +66,7 @@ We recommend testing with the **Checkers Pizza** demo site:
 
 ## ⚠️ Caveats
 
-- **Experimental preview** — This is a developer tool for testing the WebMCP API. Do not use in production.
-- **Trusted sites only** — The extension runs on all pages. Only use it on sites you trust.
-- **API costs** — Each agent step makes an Azure OpenAI API call. When using **▶▶ Run**, monitor the agent closely — it can enter a loop and exhaust your token credits. Prefer **▶ Step** for controlled execution.
-- **No warranty** — The agent may take unexpected actions. Use the Step button and disable Auto-approve to review each action before execution.
+- **Experimental preview** - This is a developer tool for testing the WebMCP API. Do not use in production.
+- **Trusted sites only** - The extension runs on all pages. Only use it on sites you trust.
+- **API costs** - Each agent step makes an Azure OpenAI API call. When using **▶▶ Run**, monitor the agent closely as it can enter a loop and exhaust your token credits. Prefer **▶ Step** for controlled execution.
+- **No warranty** - The agent may take unexpected actions. Use the Step button and disable Auto-approve to review each action before execution.
