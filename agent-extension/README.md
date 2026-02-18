@@ -69,4 +69,4 @@ We recommend testing with the **Checkers Pizza** demo site:
 - **Experimental preview** - This is a developer tool for testing the WebMCP API. Do not use in production.
 - **Trusted sites only** - The extension runs on all pages. Only use it on sites you trust.
 - **API costs** - Each agent step makes an Azure OpenAI API call. When using **▶▶ Run**, monitor the agent closely as it can enter a loop and exhaust your token credits. Prefer **▶ Step** for controlled execution.
-- **No warranty** - The agent may take unexpected actions. Use the Step button and disable Auto-approve to review each action before execution.
+- **No gurantees** - The agent may take unexpected actions. Use the Step button and disable Auto-approve to review each action before execution.
