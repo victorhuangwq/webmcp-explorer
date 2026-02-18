@@ -40,8 +40,12 @@ body {
 }
 
 .tab:hover { color: #2563eb; background: transparent; }
-.tab:focus, .tab:focus-visible {
+.tab:focus {
   outline: none;
+}
+.tab:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
   background: transparent;
 }
 .tab.active {
