@@ -23,6 +23,11 @@ const approveBtn = document.getElementById('approveBtn');
 const skipBtn = document.getElementById('skipBtn');
 const abortBtn = document.getElementById('abortBtn');
 
+const userReplyPanel = document.getElementById('userReplyPanel');
+const userReplyQuestion = document.getElementById('userReplyQuestion');
+const userReplyInput = document.getElementById('userReplyInput');
+const userReplyBtn = document.getElementById('userReplyBtn');
+
 const settingsEndpoint = document.getElementById('settingsEndpoint');
 const settingsApiKey = document.getElementById('settingsApiKey');
 const settingsDeployment = document.getElementById('settingsDeployment');
@@ -36,6 +41,7 @@ const maxIterationsValue = document.getElementById('maxIterationsValue');
 let currentTools = [];
 let abortController = null;
 let approvalResolver = null;
+let userReplyResolver = null;
 
 // ============ TABS ============
 document.querySelectorAll('.tab').forEach((tab) => {
@@ -219,6 +225,7 @@ async function startAgent(singleTurn) {
       signal: abortController.signal,
       onStep: handleAgentStep,
       waitForApproval: waitForUserApproval,
+      waitForUserInput: waitForUserReply,
     });
   } catch (err) {
     logAgent('error', `Agent error: ${err.message}`);
@@ -229,6 +236,7 @@ async function startAgent(singleTurn) {
   stopBtn.disabled = true;
   goalInput.disabled = false;
   approvalPanel.style.display = 'none';
+  userReplyPanel.style.display = 'none';
   await updateAgentButtonState();
 
   // Refresh tools after execution (page state may have changed)
@@ -288,6 +296,9 @@ function handleAgentStep({ type, data }) {
     case 'completed':
       logAgent('done', `✓ ${data.reason}`);
       break;
+    case 'ask_user':
+      logAgent('waiting', `❓ ${data.question}`);
+      break;
     case 'aborted':
       logAgent('error', `⏹ Aborted at step ${data.iteration}`);
       break;
@@ -340,6 +351,34 @@ abortBtn.onclick = () => {
   }
   approvalPanel.style.display = 'none';
   stopBtn.click();
+};
+
+// ============ USER REPLY FLOW ============
+function waitForUserReply(question) {
+  return new Promise((resolve) => {
+    userReplyResolver = resolve;
+    userReplyQuestion.textContent = question;
+    userReplyInput.value = '';
+    userReplyPanel.style.display = 'block';
+    userReplyInput.focus();
+  });
+}
+
+userReplyBtn.onclick = () => {
+  if (userReplyResolver) {
+    const reply = userReplyInput.value.trim() || '(no reply)';
+    logAgent('result', `💬 ${reply}`);
+    userReplyResolver(reply);
+    userReplyResolver = null;
+  }
+  userReplyPanel.style.display = 'none';
+};
+
+userReplyInput.onkeydown = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    userReplyBtn.click();
+  }
 };
 
 // ============ TOOL SCHEMA TEMPLATE GENERATOR ============

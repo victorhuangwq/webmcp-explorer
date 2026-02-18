@@ -147,10 +147,35 @@ const SYSTEM_PROMPT = `You are a browser automation agent. You interact with web
 
 RULES:
 1. Call exactly ONE tool per turn. After each call, the available tools may change (the page updates its state). You will receive the updated tool list.
-2. When your goal is fully achieved, respond with a plain text summary — do NOT call any more tools.
-3. If no tools are available, respond with a status message.
-4. Use the tool descriptions to understand what each tool does and what parameters it expects.
-5. Always progress toward the user's goal. Do not repeat actions already completed.`;
+2. When the goal is fully achieved, call the "complete" tool with a short summary.
+3. Use the tool descriptions to understand what each tool does and what parameters it expects.
+4. Always progress toward the user's goal. Do not repeat actions already completed.`;
+
+const COMPLETE_TOOL = {
+  type: 'function',
+  name: 'complete',
+  description: 'Call this tool when the user\'s goal has been fully achieved. Provide a short summary of what was accomplished.',
+  parameters: {
+    type: 'object',
+    properties: {
+      summary: { type: 'string', description: 'A short summary of what was accomplished.' },
+    },
+    required: ['summary'],
+  },
+};
+
+const ASK_USER_TOOL = {
+  type: 'function',
+  name: 'ask_user',
+  description: 'Call this tool when you need additional information from the user that was not provided in the goal (e.g., name, phone number, email, preferences). Ask a clear, specific question.',
+  parameters: {
+    type: 'object',
+    properties: {
+      question: { type: 'string', description: 'The question to ask the user.' },
+    },
+    required: ['question'],
+  },
+};
 
 /**
  * Query current tools from the page via content script.
@@ -196,6 +221,7 @@ function settle(ms = 500) {
  * @param {number} options.maxIterations - Safety limit (default 20)
  * @param {function} options.onStep - Callback for each step: ({ type, data })
  * @param {function} options.waitForApproval - Async function that resolves when user approves
+ * @param {function} options.waitForUserInput - Async function that resolves with user's text reply
  * @param {AbortSignal} options.signal - AbortController signal to cancel
  * @returns {Promise<void>}
  */
@@ -206,6 +232,7 @@ export async function runAgent(goal, options = {}) {
     maxIterations = 20,
     onStep = () => {},
     waitForApproval = async () => {},
+    waitForUserInput = async () => '',
     signal,
   } = options;
 
@@ -253,7 +280,7 @@ export async function runAgent(goal, options = {}) {
         model: s.deploymentName,
         instructions,
         input,
-        tools: convertToolsToOpenAI(tools),
+        tools: [...convertToolsToOpenAI(tools), COMPLETE_TOOL, ASK_USER_TOOL],
         tool_choice: 'auto',
       };
 
@@ -295,17 +322,18 @@ export async function runAgent(goal, options = {}) {
       return;
     }
 
-    // 4. Handle empty response (no text, no tool calls)
+    // 4. Handle empty response — log and continue
     if (!response.text && !response.toolCalls) {
-      onStep({ type: 'error', data: { iteration, error: 'LLM returned empty response' } });
-      return;
+      previousResponseId = response.responseId;
+      continue;
     }
 
-    // 5. Handle text-only response (goal achieved)
+    // 5. Handle text-only response — log and continue
     if (response.text && !response.toolCalls) {
       previousResponseId = response.responseId;
-      onStep({ type: 'completed', data: { iteration, reason: response.text } });
-      return;
+      onStep({ type: 'tool_result', data: { iteration, name: 'assistant', result: response.text } });
+      input = [{ role: 'user', content: 'Continue.' }];
+      continue;
     }
 
     // 6. Handle tool calls
@@ -320,6 +348,31 @@ export async function runAgent(goal, options = {}) {
           parsedArgs = JSON.parse(toolCall.arguments);
         } catch {
           parsedArgs = toolCall.arguments;
+        }
+
+        // Handle the built-in "complete" tool
+        if (toolCall.name === 'complete') {
+          const summary = parsedArgs?.summary || 'Goal achieved.';
+          onStep({ type: 'completed', data: { iteration, reason: summary } });
+          return;
+        }
+
+        // Handle the built-in "ask_user" tool
+        if (toolCall.name === 'ask_user') {
+          const question = parsedArgs?.question || 'Please provide more information.';
+          onStep({ type: 'ask_user', data: { iteration, question } });
+          const userReply = await waitForUserInput(question);
+          if (signal?.aborted) {
+            onStep({ type: 'aborted', data: { iteration } });
+            return;
+          }
+          onStep({ type: 'tool_result', data: { iteration, name: 'ask_user', result: userReply } });
+          toolOutputs.push({
+            type: 'function_call_output',
+            call_id: toolCall.id,
+            output: userReply,
+          });
+          continue;
         }
 
         onStep({

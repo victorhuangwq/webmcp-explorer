@@ -72,6 +72,15 @@
         <div id="agentLog" class="output agent-log"></div>
       </div>
 
+      <!-- User reply input -->
+      <div id="userReplyPanel" class="user-reply-panel" style="display:none;">
+        <div id="userReplyQuestion" class="user-reply-question"></div>
+        <div class="user-reply-row">
+          <textarea id="userReplyInput" placeholder="Type your reply..." rows="2"></textarea>
+          <button id="userReplyBtn">Send</button>
+        </div>
+      </div>
+
       <!-- Approval overlay -->
       <div id="approvalPanel" class="approval-panel" style="display:none;">
         <div class="approval-header">Approve tool call?</div>
