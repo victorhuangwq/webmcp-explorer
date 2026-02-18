@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "WebMCP Agent Controller",
+  "name": "WebMCP Explorer",
   "description": "Autonomous agent loop and manual tool execution for WebMCP-enabled pages",
   "version": "1.0",
   "permissions": ["sidePanel", "activeTab", "scripting", "storage"],

@@ -1,4 +1,4 @@
-// background.js — Service worker for WebMCP Agent Controller
+// background.js — Service worker for WebMCP Explorer
 
 // Open side panel on action icon click
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });

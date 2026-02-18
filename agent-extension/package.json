@@ -1,8 +1,8 @@
 {
-  "name": "webmcp-agent-extension",
+  "name": "webmcp-explorer",
   "version": "1.0.0",
   "private": true,
-  "description": "WebMCP Agent Controller - autonomous agent loop for WebMCP tools",
+  "description": "WebMCP Explorer - autonomous agent loop for WebMCP tools",
   "scripts": {
     "postinstall": "node bundle.js"
   },

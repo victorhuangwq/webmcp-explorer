@@ -1,4 +1,4 @@
-# WebMCP Agent Controller — Chrome/Edge Extension
+# WebMCP Explorer — Chrome/Edge Extension
 
 > ⚠️ **Experimental Preview** — This extension is for developer testing only. Not intended for production use. Only use on sites you trust.
 

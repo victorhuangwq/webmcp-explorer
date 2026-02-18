@@ -1,4 +1,4 @@
-// agent.js — Autonomous agent loop over WebMCP tools with Azure OpenAI
+// agent.js — WebMCP Explorer: autonomous agent loop over WebMCP tools with Azure OpenAI
 
 import { AzureOpenAI } from './openai-bundle.js';
 

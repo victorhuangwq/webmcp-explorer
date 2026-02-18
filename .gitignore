@@ -4,3 +4,4 @@ node_modules/
 .env
 dist/
 extension/*
+agent-extension/_entry.js

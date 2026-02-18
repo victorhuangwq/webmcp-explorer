@@ -1,4 +1,4 @@
-// sidebar.js — Side panel controller for WebMCP Agent Extension
+// sidebar.js — Side panel controller for WebMCP Explorer
 
 import { runAgent, listTools, executeTool, saveSettings, isConfigured, getSettings } from './agent.js';
 
