@@ -53,16 +53,47 @@ If you don't have an Azure subscription:
 
 1. Clone this repository into a local directory.
 
-1. Load the extension in your browser:
+2. Load the extension in your browser:
    - Go to `edge://extensions` (or `chrome://extensions`)
    - Enable **Developer mode**
-   - Click **Load unpacked** and select the `agent-extension/` folder in this repository
+   - Click **Load unpacked** and select the **`dist/`** folder in this repository
 
-2. Click the extension icon in the toolbar to open the side panel.
+3. Click the extension icon in the toolbar to open the side panel.
 
-3. Go to the **⚙️ Settings** tab and enter your Azure OpenAI credentials.
+4. Go to the **⚙️ Settings** tab and enter your Azure OpenAI credentials.
 
-> **Note:** The OpenAI SDK is pre-bundled as `openai-bundle.js`. If you need to regenerate it (e.g., after upgrading the SDK version), run `npm install` in the `agent-extension/` directory.
+> **Note:** The `dist/` folder is pre-built and ready to use. No build step is needed just to run the extension.
+
+## Project Structure
+
+```
+webmcp-explorer/
+├── src/                  # Source files (edit these)
+│   ├── manifest.json
+│   ├── background.js
+│   ├── content.js
+│   ├── sidebar.html
+│   ├── sidebar.js
+│   ├── sidebar.css
+│   └── agent.js
+├── scripts/              # Build tooling
+│   ├── build.js          # Copies src/ → dist/ and runs bundle
+│   └── bundle.js         # Bundles the OpenAI SDK via esbuild
+├── dist/                 # Loadable extension (committed, do not edit directly)
+│   ├── ... (copied from src/)
+│   └── openai-bundle.js  # Generated OpenAI SDK bundle
+├── package.json
+├── README.md
+└── .gitignore
+```
+
+## Development
+
+If you want to modify the extension source code:
+
+1. Edit files in the **`src/`** folder (not `dist/`).
+2. Run `npm install` to install dependencies and auto-build, or run `npm run build` to rebuild after making changes.
+3. Reload the extension in your browser (`edge://extensions` → click the refresh icon on WebMCP Explorer).
 
 ## Try it out
 

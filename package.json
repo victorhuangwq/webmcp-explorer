@@ -4,7 +4,8 @@
   "private": true,
   "description": "WebMCP Explorer - autonomous agent loop for WebMCP tools",
   "scripts": {
-    "postinstall": "node bundle.js"
+    "build": "node scripts/build.js",
+    "postinstall": "node scripts/build.js"
   },
   "dependencies": {
     "openai": "^4.77.0"

@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "WebMCP Explorer",
+  "description": "Autonomous agent loop and manual tool execution for WebMCP-enabled pages",
+  "version": "1.0",
+  "permissions": ["sidePanel", "activeTab", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {},
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "run_at": "document_start",
+      "js": ["content.js"]
+    }
+  ]
+}

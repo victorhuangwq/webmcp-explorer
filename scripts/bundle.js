@@ -1,21 +1,24 @@
-// bundle.js — Post-install script to bundle OpenAI SDK for browser use
+// bundle.js — Bundles the OpenAI SDK for browser use via esbuild
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const rootDir = path.join(__dirname, '..');
+const distDir = path.join(rootDir, 'dist');
+
 // Use esbuild to bundle the OpenAI SDK into a single browser-compatible file
 const entryContent = `export { AzureOpenAI } from 'openai';\n`;
-const entryPath = path.join(__dirname, '_entry.js');
-const outPath = path.join(__dirname, 'openai-bundle.js');
+const entryPath = path.join(rootDir, '_entry.js');
+const outPath = path.join(distDir, 'openai-bundle.js');
 
 fs.writeFileSync(entryPath, entryContent);
 
 try {
   execSync(
     `npx esbuild "${entryPath}" --bundle --format=esm --outfile="${outPath}" --platform=browser --target=chrome120`,
-    { stdio: 'inherit', cwd: __dirname }
+    { stdio: 'inherit', cwd: rootDir }
   );
-  console.log('✓ OpenAI SDK bundled to openai-bundle.js');
+  console.log('✓ OpenAI SDK bundled to dist/openai-bundle.js');
 } finally {
-  fs.unlinkSync(entryPath);
+  if (fs.existsSync(entryPath)) fs.unlinkSync(entryPath);
 }
