@@ -62,8 +62,6 @@ If you don't have an Azure subscription:
 
 4. Go to the **⚙️ Settings** tab and enter your Azure OpenAI credentials.
 
-> **Note:** The `dist/` folder is pre-built and ready to use. No build step is needed just to run the extension.
-
 ## Try it out
 
 We recommend testing with the **Checkers Pizza** demo site:
