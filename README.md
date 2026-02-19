@@ -64,37 +64,6 @@ If you don't have an Azure subscription:
 
 > **Note:** The `dist/` folder is pre-built and ready to use. No build step is needed just to run the extension.
 
-## Project Structure
-
-```
-webmcp-explorer/
-├── src/                  # Source files (edit these)
-│   ├── manifest.json
-│   ├── background.js
-│   ├── content.js
-│   ├── sidebar.html
-│   ├── sidebar.js
-│   ├── sidebar.css
-│   └── agent.js
-├── scripts/              # Build tooling
-│   ├── build.js          # Copies src/ → dist/ and runs bundle
-│   └── bundle.js         # Bundles the OpenAI SDK via esbuild
-├── dist/                 # Loadable extension (committed, do not edit directly)
-│   ├── ... (copied from src/)
-│   └── openai-bundle.js  # Generated OpenAI SDK bundle
-├── package.json
-├── README.md
-└── .gitignore
-```
-
-## Development
-
-If you want to modify the extension source code:
-
-1. Edit files in the **`src/`** folder (not `dist/`).
-2. Run `npm install` to install dependencies and auto-build, or run `npm run build` to rebuild after making changes.
-3. Reload the extension in your browser (`edge://extensions` → click the refresh icon on WebMCP Explorer).
-
 ## Try it out
 
 We recommend testing with the **Checkers Pizza** demo site:
@@ -125,3 +94,34 @@ We recommend testing with the **Checkers Pizza** demo site:
 - **Trusted sites only** - The extension runs on all pages. Only use it on sites you trust.
 - **API costs** - Each agent step makes an Azure OpenAI API call. When using **▶▶ Run**, monitor the agent closely as it can enter a loop and exhaust your token credits. Prefer **▶ Step** for controlled execution.
 - **No guarantees** - The agent may take unexpected actions. Use the Step button and disable Auto-approve to review each action before execution.
+
+## Project Structure
+
+```
+webmcp-explorer/
+├── src/                  # Source files (edit these)
+│   ├── manifest.json
+│   ├── background.js
+│   ├── content.js
+│   ├── sidebar.html
+│   ├── sidebar.js
+│   ├── sidebar.css
+│   └── agent.js
+├── scripts/              # Build tooling
+│   ├── build.js          # Copies src/ → dist/ and runs bundle
+│   └── bundle.js         # Bundles the OpenAI SDK via esbuild
+├── dist/                 # Loadable extension (committed, do not edit directly)
+│   ├── ... (copied from src/)
+│   └── openai-bundle.js  # Generated OpenAI SDK bundle
+├── package.json
+├── README.md
+└── .gitignore
+```
+
+## Development
+
+If you want to modify the extension source code:
+
+1. Edit files in the **`src/`** folder (not `dist/`).
+2. Run `npm install` to install dependencies and auto-build, or run `npm run build` to rebuild after making changes.
+3. Reload the extension in your browser (`edge://extensions` → click the refresh icon on WebMCP Explorer).
