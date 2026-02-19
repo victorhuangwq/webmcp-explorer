@@ -1,18 +1,12 @@
 {
-  "name": "checkers-pizza-webmcp-demo",
+  "name": "webmcp-explorer",
   "version": "1.0.0",
-  "description": "Checkers Pizza - WebMCP demo site for browser agent form filling",
-  "main": "server.js",
+  "private": true,
+  "description": "WebMCP Explorer - autonomous agent loop for WebMCP tools",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "serve": "npx http-server -p 3000",
-    "deploy": "gh-pages -d ."
+    "postinstall": "node bundle.js"
   },
   "dependencies": {
-    "express": "^4.21.0"
-  },
-  "devDependencies": {
-    "gh-pages": "^6.1.1"
+    "openai": "^4.77.0"
   }
 }

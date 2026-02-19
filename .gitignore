@@ -2,6 +2,4 @@ node_modules/
 .DS_Store
 *.log
 .env
-dist/
-extension/*
-agent-extension/_entry.js
+_entry.js
