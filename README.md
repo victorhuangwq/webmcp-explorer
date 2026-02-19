@@ -1,4 +1,4 @@
-# WebMCP Explorer - Chrome/Edge Extension
+# WebMCP Explorer - Edge/Chrome Extension
 
 > ⚠️ **Experimental Preview** - This extension is for developer testing only. Not intended for production use. Only use on sites you trust.
 
@@ -10,7 +10,7 @@ A browser extension that lets an AI agent interact with web pages through the [W
 
 ### 1. Azure OpenAI (AI Foundry)
 
-You need an Azure OpenAI resource with a deployed model. Currently only tested with `gpt-5.2-chat`.
+You need an Azure OpenAI resource with a deployed model. Currently tested with `gpt-5.2-chat`.
  
 From [Azure AI Foundry](https://ai.azure.com/), grab:
 - **Endpoint** - from Endpoint section, called "Target URI" (e.g. `https://your-resource.azure.com/openai/...`)
