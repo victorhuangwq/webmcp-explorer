@@ -9,9 +9,10 @@ const SETTINGS_KEYS = {
   apiKey: 'aoai_apiKey',
   deploymentName: 'aoai_deployment',
   apiVersion: 'aoai_apiVersion',
+  allowIframe: 'allow_iframe',
 };
 
-const DEFAULTS = { endpoint: '', apiKey: '', deploymentName: '', apiVersion: '2025-03-01-preview' };
+const DEFAULTS = { endpoint: '', apiKey: '', deploymentName: '', apiVersion: '2025-03-01-preview', allowIframe: false };
 
 /**
  * Get stored Azure OpenAI settings from chrome.storage.local.
@@ -23,6 +24,7 @@ export async function getSettings() {
     apiKey: result[SETTINGS_KEYS.apiKey] || DEFAULTS.apiKey,
     deploymentName: result[SETTINGS_KEYS.deploymentName] || DEFAULTS.deploymentName,
     apiVersion: result[SETTINGS_KEYS.apiVersion] || DEFAULTS.apiVersion,
+    allowIframe: result[SETTINGS_KEYS.allowIframe] ?? DEFAULTS.allowIframe,
   };
 }
 
@@ -41,6 +43,21 @@ export async function saveSettings({ endpoint, apiKey, deploymentName, apiVersio
     [SETTINGS_KEYS.deploymentName]: deploymentName || '',
     [SETTINGS_KEYS.apiVersion]: apiVersion || DEFAULTS.apiVersion,
   });
+}
+
+/**
+ * Get the allow_iframe setting.
+ */
+export async function getAllowIframe() {
+  const result = await chrome.storage.local.get(SETTINGS_KEYS.allowIframe);
+  return result[SETTINGS_KEYS.allowIframe] ?? DEFAULTS.allowIframe;
+}
+
+/**
+ * Set the allow_iframe setting.
+ */
+export async function setAllowIframe(value) {
+  await chrome.storage.local.set({ [SETTINGS_KEYS.allowIframe]: !!value });
 }
 
 /**
@@ -178,12 +195,31 @@ const ASK_USER_TOOL = {
 };
 
 /**
- * Query current tools from ALL frames in the active tab via background script.
+ * Query current tools from the active tab.
+ * When allow_iframe is enabled, queries ALL frames; otherwise only the top frame.
  * Each tool is annotated with _frameId, _tabId, and _frameUrl for routing.
  */
 async function listTools() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return [];
+
+  const allowIframe = await getAllowIframe();
+
+  // If iframes disabled, only query the top frame
+  if (!allowIframe) {
+    try {
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' });
+      return (response?.tools || []).map((t) => ({
+        ...t,
+        _frameId: 0,
+        _tabId: tab.id,
+        _frameUrl: response?.url || tab.url,
+        _isTopFrame: true,
+      }));
+    } catch {
+      return [];
+    }
+  }
 
   try {
     const frames = await chrome.webNavigation.getAllFrames({ tabId: tab.id });
@@ -501,4 +537,4 @@ export async function runAgent(goal, options = {}) {
 }
 
 // Re-export for manual tool execution (no LLM)
-export { listTools, executeTool };
+export { listTools, executeTool, getAllowIframe, setAllowIframe };
