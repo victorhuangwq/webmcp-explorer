@@ -27,16 +27,23 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 });
 
 /**
- * Collect tools from all frames in a tab and return an array of
- * { frameId, url, tools[] } entries.
+ * Collect tools from frames in a tab, respecting the allow_iframe setting.
+ * Returns an array of { frameId, url, tools[] } entries.
  */
 async function collectToolsFromAllFrames(tabId) {
   const results = [];
+  const stored = await chrome.storage.local.get('allow_iframe');
+  const allowIframe = stored.allow_iframe ?? false; // default: off
+
   try {
     const frames = await chrome.webNavigation.getAllFrames({ tabId });
     if (!frames) return results;
 
-    const promises = frames.map(async (frame) => {
+    const framesToQuery = allowIframe
+      ? frames
+      : frames.filter((f) => f.parentFrameId === -1); // top frame only
+
+    const promises = framesToQuery.map(async (frame) => {
       try {
         const response = await chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' }, { frameId: frame.frameId });
         if (response?.tools?.length) {

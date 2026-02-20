@@ -537,4 +537,4 @@ export async function runAgent(goal, options = {}) {
 }
 
 // Re-export for manual tool execution (no LLM)
-export { listTools, executeTool, getAllowIframe, setAllowIframe };
+export { listTools, executeTool };

@@ -1,6 +1,6 @@
 // sidebar.js — Side panel controller for WebMCP Explorer
 
-import { runAgent, listTools, executeTool, saveSettings, isConfigured, getSettings } from './agent.js';
+import { runAgent, listTools, executeTool, saveSettings, isConfigured, getSettings, getAllowIframe, setAllowIframe } from './agent.js';
 
 // ============ DOM REFS ============
 const toolSelect = document.getElementById('toolSelect');
@@ -36,6 +36,7 @@ const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const settingsStatus = document.getElementById('settingsStatus');
 const maxIterationsInput = document.getElementById('maxIterations');
 const maxIterationsValue = document.getElementById('maxIterationsValue');
+const allowIframeToggle = document.getElementById('allowIframeToggle');
 
 // ============ STATE ============
 let currentTools = [];
@@ -63,6 +64,7 @@ async function loadSettings() {
   const stored = await chrome.storage.local.get('agent_maxIterations');
   maxIterationsInput.value = stored.agent_maxIterations || '20';
   maxIterationsValue.textContent = maxIterationsInput.value;
+  allowIframeToggle.checked = await getAllowIframe();
 }
 
 saveSettingsBtn.onclick = async () => {
@@ -86,6 +88,11 @@ saveSettingsBtn.onclick = async () => {
 maxIterationsInput.oninput = () => {
   maxIterationsValue.textContent = maxIterationsInput.value;
   chrome.storage.local.set({ agent_maxIterations: maxIterationsInput.value });
+};
+
+allowIframeToggle.onchange = async () => {
+  await setAllowIframe(allowIframeToggle.checked);
+  refreshTools();
 };
 
 loadSettings();
