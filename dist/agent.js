@@ -178,29 +178,81 @@ const ASK_USER_TOOL = {
 };
 
 /**
- * Query current tools from the page via content script.
+ * Query current tools from ALL frames in the active tab via background script.
+ * Each tool is annotated with _frameId, _tabId, and _frameUrl for routing.
  */
 async function listTools() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab) return [];
+
   try {
-    const response = await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' });
-    return response?.tools || [];
+    const frames = await chrome.webNavigation.getAllFrames({ tabId: tab.id });
+    if (!frames) return [];
+
+    const allTools = [];
+    const seen = new Set();
+
+    const promises = frames.map(async (frame) => {
+      try {
+        const response = await chrome.tabs.sendMessage(
+          tab.id,
+          { action: 'LIST_TOOLS' },
+          { frameId: frame.frameId }
+        );
+        if (response?.tools?.length) {
+          for (const tool of response.tools) {
+            // Deduplicate by name+frameId
+            const key = `${tool.name}@${frame.frameId}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              allTools.push({
+                ...tool,
+                _frameId: frame.frameId,
+                _tabId: tab.id,
+                _frameUrl: response.url || frame.url,
+                _isTopFrame: frame.parentFrameId === -1,
+              });
+            }
+          }
+        }
+      } catch {
+        // Frame may not have WebMCP or content script
+      }
+    });
+
+    await Promise.all(promises);
+    return allTools;
   } catch {
-    return [];
+    // Fallback: try top frame only
+    try {
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' });
+      return (response?.tools || []).map((t) => ({
+        ...t,
+        _frameId: 0,
+        _tabId: tab.id,
+        _frameUrl: response?.url || tab.url,
+        _isTopFrame: true,
+      }));
+    } catch {
+      return [];
+    }
   }
 }
 
 /**
- * Execute a tool on the page via content script.
+ * Execute a tool on the page via content script, targeting the correct frame.
  */
-async function executeTool(name, args) {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+async function executeTool(name, args, frameId = 0, tabId = null) {
+  if (!tabId) {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    tabId = tab.id;
+  }
   const inputArgs = typeof args === 'string' ? args : JSON.stringify(args);
-  const response = await chrome.tabs.sendMessage(tab.id, {
-    action: 'EXECUTE_TOOL',
-    name,
-    inputArgs,
-  });
+  const response = await chrome.tabs.sendMessage(
+    tabId,
+    { action: 'EXECUTE_TOOL', name, inputArgs },
+    { frameId }
+  );
   return response;
 }
 
@@ -258,13 +310,14 @@ export async function runAgent(goal, options = {}) {
       return;
     }
 
-    // 2. Build instructions with current tool descriptions
+    // 2. Build instructions with current tool descriptions (include frame origin info)
     const instructions = SYSTEM_PROMPT + '\n\nCURRENTLY AVAILABLE TOOLS:\n' +
       tools.map((t) => {
         const schema = t.inputSchema
           ? (typeof t.inputSchema === 'string' ? t.inputSchema : JSON.stringify(t.inputSchema))
           : '{}';
-        return `- ${t.name}: ${t.description}\n  inputSchema: ${schema}`;
+        const frameLabel = t._isTopFrame ? 'top frame' : `iframe: ${t._frameUrl || 'unknown'}`;
+        return `- ${t.name} [${frameLabel}]: ${t.description}\n  inputSchema: ${schema}`;
       }).join('\n');
 
     // 3. Send to Azure OpenAI (Responses API)
@@ -404,11 +457,15 @@ export async function runAgent(goal, options = {}) {
           return;
         }
 
-        // Execute the tool
+        // Execute the tool — route to the correct frame
         onStep({ type: 'tool_executing', data: { iteration, name: toolCall.name } });
+        // Find the tool definition to get frame routing info
+        const toolDef = tools.find((t) => t.name === toolCall.name);
+        const targetFrameId = toolDef?._frameId ?? 0;
+        const targetTabId = toolDef?._tabId ?? null;
         let result;
         try {
-          result = await executeTool(toolCall.name, toolCall.arguments);
+          result = await executeTool(toolCall.name, toolCall.arguments, targetFrameId, targetTabId);
         } catch (err) {
           result = { success: false, error: err.message };
         }

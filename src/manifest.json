@@ -3,7 +3,7 @@
   "name": "WebMCP Explorer",
   "description": "Autonomous agent loop and manual tool execution for WebMCP-enabled pages",
   "version": "1.0",
-  "permissions": ["sidePanel", "activeTab", "scripting", "storage"],
+  "permissions": ["sidePanel", "activeTab", "scripting", "storage", "webNavigation"],
   "host_permissions": ["<all_urls>"],
   "action": {},
   "background": {
@@ -16,6 +16,7 @@
     {
       "matches": ["<all_urls>"],
       "run_at": "document_start",
+      "all_frames": true,
       "js": ["content.js"]
     }
   ]

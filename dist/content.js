@@ -1,6 +1,6 @@
 // content.js — Bridge between extension and navigator.modelContextTesting API
 
-console.debug('[WebMCP Explorer] Content script injected');
+console.debug('[WebMCP Explorer] Content script injected in', window === top ? 'top frame' : 'iframe', location.href);
 
 let toolsChangedNotified = false;
 
@@ -16,16 +16,16 @@ chrome.runtime.onMessage.addListener(({ action, name, inputArgs }, _, reply) => 
 
     if (action === 'LIST_TOOLS') {
       const tools = navigator.modelContextTesting.listTools();
-      console.debug(`[WebMCP Explorer] Listed ${tools.length} tools`);
-      reply({ tools, url: location.href });
+      console.debug(`[WebMCP Explorer] Listed ${tools.length} tools in ${location.href}`);
+      reply({ tools, url: location.href, isTopFrame: window === top });
 
       // Register callback once to notify on tool changes
       if (!toolsChangedNotified) {
         toolsChangedNotified = true;
         navigator.modelContextTesting.registerToolsChangedCallback(() => {
           const updatedTools = navigator.modelContextTesting.listTools();
-          console.debug(`[WebMCP Explorer] Tools changed: ${updatedTools.length} tools`);
-          chrome.runtime.sendMessage({ type: 'TOOLS_CHANGED', tools: updatedTools, url: location.href });
+          console.debug(`[WebMCP Explorer] Tools changed: ${updatedTools.length} tools in ${location.href}`);
+          chrome.runtime.sendMessage({ type: 'TOOLS_CHANGED', tools: updatedTools, url: location.href, isTopFrame: window === top });
         });
       }
       return false; // synchronous reply

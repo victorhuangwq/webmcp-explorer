@@ -305,6 +305,15 @@ button:disabled {
   white-space: nowrap;
   max-width: 180px;
 }
+.tool-chip .tool-frame {
+  font-size: 9px;
+  font-weight: 400;
+  color: #9333ea;
+  background: #f3e8ff;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 4px;
+}
 
 /* Approval panel */
 .approval-panel {
@@ -414,6 +423,7 @@ select:disabled, textarea:disabled, input:disabled {
   .tool-chip:hover { background: #1e3a5f; }
   .tool-chip .tool-name { color: #60a5fa; }
   .tool-chip .tool-desc { color: #94a3b8; }
+  .tool-chip .tool-frame { color: #c084fc; background: #3b0764; }
 
   .approval-panel { background: #1c1917; border-color: #d97706; }
   .approval-header { color: #fbbf24; }

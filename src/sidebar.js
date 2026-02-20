@@ -105,8 +105,9 @@ function renderToolsList() {
   toolsList.innerHTML = currentTools
     .map((t) => {
       const desc = t.description || '';
-      return `<div class="tool-chip" data-name="${t.name}">
-        <span class="tool-name">${t.name}</span>
+      const frameLabel = t._isTopFrame ? '' : ` <span class="tool-frame" title="${t._frameUrl || ''}">[iframe]</span>`;
+      return `<div class="tool-chip" data-name="${t.name}" data-frame-id="${t._frameId ?? 0}" data-tab-id="${t._tabId ?? ''}">
+        <span class="tool-name">${t.name}${frameLabel}</span>
         <span class="tool-desc" title="${desc}">${desc}</span>
       </div>`;
     })
@@ -115,7 +116,7 @@ function renderToolsList() {
   // Click a chip to select it in the dropdown
   toolsList.querySelectorAll('.tool-chip').forEach((chip) => {
     chip.addEventListener('click', () => {
-      toolSelect.value = chip.dataset.name;
+      toolSelect.value = `${chip.dataset.name}@${chip.dataset.frameId}`;
       toolSelect.dispatchEvent(new Event('change'));
     });
   });
@@ -133,9 +134,13 @@ function renderToolSelect() {
 
   currentTools.forEach((t) => {
     const opt = document.createElement('option');
-    opt.value = t.name;
-    opt.textContent = t.name;
+    const frameLabel = t._isTopFrame ? '' : ' [iframe]';
+    opt.value = `${t.name}@${t._frameId ?? 0}`;
+    opt.textContent = `${t.name}${frameLabel}`;
     opt.dataset.inputSchema = t.inputSchema || '{}';
+    opt.dataset.toolName = t.name;
+    opt.dataset.frameId = t._frameId ?? 0;
+    opt.dataset.tabId = t._tabId ?? '';
     toolSelect.appendChild(opt);
   });
 
@@ -162,14 +167,18 @@ function updateArgsTemplate() {
 }
 
 executeBtn.onclick = async () => {
-  const name = toolSelect.value;
+  const selected = toolSelect.selectedOptions[0];
+  const name = selected?.dataset?.toolName;
   if (!name) return;
+
+  const frameId = parseInt(selected.dataset.frameId) || 0;
+  const tabId = selected.dataset.tabId ? parseInt(selected.dataset.tabId) : undefined;
 
   executeBtn.disabled = true;
   toolResult.textContent = 'Executing...';
 
   try {
-    const result = await executeTool(name, toolArgs.value);
+    const result = await executeTool(name, toolArgs.value, frameId, tabId);
     if (result?.success) {
       toolResult.textContent =
         typeof result.result === 'string' ? result.result : JSON.stringify(result.result, null, 2);
@@ -408,9 +417,8 @@ function generateTemplate(schema) {
 // ============ LISTEN FOR TOOL CHANGES ============
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'TOOLS_CHANGED') {
-    currentTools = msg.tools || [];
-    renderToolsList();
-    renderToolSelect();
+    // A frame reported tool changes — refresh all frames to get the full picture
+    refreshTools();
   } else if (msg.type === 'TAB_ACTIVATED') {
     refreshTools();
   }

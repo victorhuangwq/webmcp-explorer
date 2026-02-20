@@ -3,12 +3,12 @@
 // Open side panel on action icon click
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Inject content script into all existing tabs on install
+// Inject content script into all existing tabs (all frames) on install
 chrome.runtime.onInstalled.addListener(async () => {
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
     chrome.scripting
-      .executeScript({ target: { tabId: tab.id }, files: ['content.js'] })
+      .executeScript({ target: { tabId: tab.id, allFrames: true }, files: ['content.js'] })
       .catch(() => {});
   }
 });
@@ -26,13 +26,46 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
+/**
+ * Collect tools from all frames in a tab and return an array of
+ * { frameId, url, tools[] } entries.
+ */
+async function collectToolsFromAllFrames(tabId) {
+  const results = [];
+  try {
+    const frames = await chrome.webNavigation.getAllFrames({ tabId });
+    if (!frames) return results;
+
+    const promises = frames.map(async (frame) => {
+      try {
+        const response = await chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' }, { frameId: frame.frameId });
+        if (response?.tools?.length) {
+          results.push({
+            frameId: frame.frameId,
+            url: response.url || frame.url,
+            isTopFrame: frame.parentFrameId === -1,
+            tools: response.tools,
+          });
+        }
+      } catch {
+        // Frame may not have the content script or WebMCP
+      }
+    });
+
+    await Promise.all(promises);
+  } catch {
+    // webNavigation.getAllFrames may fail for special tabs
+  }
+  return results;
+}
+
 async function updateBadge(tabId) {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || tab.id !== tabId) return;
     chrome.action.setBadgeBackgroundColor({ color: '#2563eb' });
-    const response = await chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' });
-    const count = response?.tools?.length || 0;
+    const frameResults = await collectToolsFromAllFrames(tabId);
+    const count = frameResults.reduce((sum, fr) => sum + fr.tools.length, 0);
     chrome.action.setBadgeText({ text: count > 0 ? `${count}` : '', tabId });
   } catch {
     chrome.action.setBadgeText({ text: '', tabId });
@@ -42,7 +75,38 @@ async function updateBadge(tabId) {
 // Forward TOOLS_CHANGED messages from content script to side panel
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.type === 'TOOLS_CHANGED' && sender.tab) {
-    const count = msg.tools?.length || 0;
-    chrome.action.setBadgeText({ text: count > 0 ? `${count}` : '', tabId: sender.tab.id });
+    // Re-compute badge from all frames
+    updateBadge(sender.tab.id);
+  }
+
+  // Handle LIST_ALL_FRAME_TOOLS requests from the sidebar/agent
+  if (msg.type === 'LIST_ALL_FRAME_TOOLS') {
+    (async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab) return;
+      const frameResults = await collectToolsFromAllFrames(tab.id);
+      // Send the aggregated results back — the sender will have a callback
+      chrome.runtime.sendMessage({ type: 'ALL_FRAME_TOOLS_RESULT', frameResults }).catch(() => {});
+    })();
+  }
+
+  // Handle EXECUTE_IN_FRAME requests from the sidebar/agent
+  if (msg.type === 'EXECUTE_IN_FRAME') {
+    const { tabId, frameId, name, inputArgs } = msg;
+    (async () => {
+      try {
+        const response = await chrome.tabs.sendMessage(
+          tabId,
+          { action: 'EXECUTE_TOOL', name, inputArgs },
+          { frameId }
+        );
+        chrome.runtime.sendMessage({ type: 'EXECUTE_IN_FRAME_RESULT', response }).catch(() => {});
+      } catch (err) {
+        chrome.runtime.sendMessage({
+          type: 'EXECUTE_IN_FRAME_RESULT',
+          response: { success: false, error: err.message },
+        }).catch(() => {});
+      }
+    })();
   }
 });
