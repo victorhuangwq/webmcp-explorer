@@ -277,8 +277,16 @@ async function listTools() {
 
 /**
  * Execute a tool on the page via content script, targeting the correct frame.
+ * Blocks non-top-frame execution when allow_iframe is off.
  */
 async function executeTool(name, args, frameId = 0, tabId = null) {
+  // Enforce allow_iframe setting
+  if (frameId !== 0) {
+    const allowIframe = await getAllowIframe();
+    if (!allowIframe) {
+      return { success: false, error: 'Iframe tool execution is disabled (allow_iframe is off).' };
+    }
+  }
   if (!tabId) {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     tabId = tab.id;

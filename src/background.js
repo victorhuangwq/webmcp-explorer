@@ -3,12 +3,14 @@
 // Open side panel on action icon click
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Inject content script into all existing tabs (all frames) on install
+// Inject content script into all existing tabs on install
 chrome.runtime.onInstalled.addListener(async () => {
+  const stored = await chrome.storage.local.get('allow_iframe');
+  const allFrames = stored.allow_iframe ?? false;
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
     chrome.scripting
-      .executeScript({ target: { tabId: tab.id, allFrames: true }, files: ['content.js'] })
+      .executeScript({ target: { tabId: tab.id, allFrames }, files: ['content.js'] })
       .catch(() => {});
   }
 });
@@ -35,15 +37,29 @@ async function collectToolsFromAllFrames(tabId) {
   const stored = await chrome.storage.local.get('allow_iframe');
   const allowIframe = stored.allow_iframe ?? false; // default: off
 
+  // When iframes are disabled, query only the top frame directly
+  if (!allowIframe) {
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' });
+      if (response?.tools?.length) {
+        results.push({
+          frameId: 0,
+          url: response.url || '',
+          isTopFrame: true,
+          tools: response.tools,
+        });
+      }
+    } catch {
+      // Top frame may not have the content script or WebMCP
+    }
+    return results;
+  }
+
   try {
     const frames = await chrome.webNavigation.getAllFrames({ tabId });
     if (!frames) return results;
 
-    const framesToQuery = allowIframe
-      ? frames
-      : frames.filter((f) => f.parentFrameId === -1); // top frame only
-
-    const promises = framesToQuery.map(async (frame) => {
+    const promises = frames.map(async (frame) => {
       try {
         const response = await chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' }, { frameId: frame.frameId });
         if (response?.tools?.length) {
@@ -82,8 +98,17 @@ async function updateBadge(tabId) {
 // Forward TOOLS_CHANGED messages from content script to side panel
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.type === 'TOOLS_CHANGED' && sender.tab) {
-    // Re-compute badge from all frames
-    updateBadge(sender.tab.id);
+    // Ignore iframe tool changes when allow_iframe is off
+    if (sender.frameId !== 0) {
+      chrome.storage.local.get('allow_iframe').then((stored) => {
+        if (stored.allow_iframe ?? false) {
+          updateBadge(sender.tab.id);
+        }
+      });
+    } else {
+      updateBadge(sender.tab.id);
+    }
+    return;
   }
 
   // Handle LIST_ALL_FRAME_TOOLS requests from the sidebar/agent
@@ -101,6 +126,17 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   if (msg.type === 'EXECUTE_IN_FRAME') {
     const { tabId, frameId, name, inputArgs } = msg;
     (async () => {
+      // Block non-top-frame execution when allow_iframe is off
+      if (frameId !== 0) {
+        const stored = await chrome.storage.local.get('allow_iframe');
+        if (!(stored.allow_iframe ?? false)) {
+          chrome.runtime.sendMessage({
+            type: 'EXECUTE_IN_FRAME_RESULT',
+            response: { success: false, error: 'Iframe tool execution is disabled (allow_iframe is off).' },
+          }).catch(() => {});
+          return;
+        }
+      }
       try {
         const response = await chrome.tabs.sendMessage(
           tabId,

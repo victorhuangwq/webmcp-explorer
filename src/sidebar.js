@@ -422,9 +422,13 @@ function generateTemplate(schema) {
 }
 
 // ============ LISTEN FOR TOOL CHANGES ============
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener(async (msg) => {
   if (msg.type === 'TOOLS_CHANGED') {
-    // A frame reported tool changes — refresh all frames to get the full picture
+    // Ignore iframe tool changes when allow_iframe is off
+    if (!msg.isTopFrame) {
+      const allowed = await getAllowIframe();
+      if (!allowed) return;
+    }
     refreshTools();
   } else if (msg.type === 'TAB_ACTIVATED') {
     refreshTools();
