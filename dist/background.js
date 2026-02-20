@@ -21,8 +21,15 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
   chrome.runtime.sendMessage({ type: 'TAB_ACTIVATED', tabId }).catch(() => {});
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   if (changeInfo.status === 'complete') {
+    // Dynamically inject content script into iframes when allow_iframe is on
+    const stored = await chrome.storage.local.get('allow_iframe');
+    if (stored.allow_iframe ?? false) {
+      chrome.scripting
+        .executeScript({ target: { tabId, allFrames: true }, files: ['content.js'] })
+        .catch(() => {});
+    }
     updateBadge(tabId);
     chrome.runtime.sendMessage({ type: 'TAB_ACTIVATED', tabId }).catch(() => {});
   }

@@ -92,6 +92,20 @@ maxIterationsInput.oninput = () => {
 
 allowIframeToggle.onchange = async () => {
   await setAllowIframe(allowIframeToggle.checked);
+  // When enabling iframes, inject content script into all frames first
+  if (allowIframeToggle.checked) {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          files: ['content.js'],
+        });
+      }
+    } catch {
+      // May fail on restricted pages
+    }
+  }
   refreshTools();
 };
 
