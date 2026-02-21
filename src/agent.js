@@ -108,56 +108,6 @@ function convertToolsToOpenAI(webmcpTools) {
   });
 }
 
-/**
- * Send a request to Azure OpenAI using the Responses API.
- * @param {Array} input - Input items (messages, function_call_output, etc.)
- * @param {Array} tools - WebMCP tool definitions
- * @param {string|null} previousResponseId - Previous response ID for chaining
- */
-async function sendMessage(input, tools = [], previousResponseId = null) {
-  const client = await createClient();
-  const s = await getSettings();
-
-  const requestParams = {
-    model: s.deploymentName,
-    input,
-  };
-
-  if (previousResponseId) {
-    requestParams.previous_response_id = previousResponseId;
-  }
-
-  if (tools.length > 0) {
-    requestParams.tools = convertToolsToOpenAI(tools);
-    requestParams.tool_choice = 'auto';
-  }
-
-  const response = await client.responses.create(requestParams);
-
-  if (!response.output || response.output.length === 0) {
-    throw new Error('No response from Azure OpenAI');
-  }
-
-  // Check for function calls in output
-  const toolCalls = response.output.filter((item) => item.type === 'function_call');
-
-  if (toolCalls.length > 0) {
-    return {
-      toolCalls: toolCalls.map((tc) => ({
-        id: tc.call_id,
-        name: tc.name,
-        arguments: tc.arguments,
-      })),
-      responseId: response.id,
-    };
-  }
-
-  return {
-    text: response.output_text || '',
-    responseId: response.id,
-  };
-}
-
 // ============ AGENT LOOP ============
 
 const SYSTEM_PROMPT = `You are a browser automation agent. You interact with web pages by calling WebMCP tools exposed by the page.
