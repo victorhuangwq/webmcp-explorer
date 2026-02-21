@@ -3,14 +3,13 @@
 // Open side panel on action icon click
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Inject content script into all existing tabs on install
+// Inject content script into all existing tabs on install/update
+// (manifest content_scripts only applies to new navigations, not pre-existing tabs)
 chrome.runtime.onInstalled.addListener(async () => {
-  const stored = await chrome.storage.local.get('allow_iframe');
-  const allFrames = stored.allow_iframe ?? false;
   const tabs = await chrome.tabs.query({});
   for (const tab of tabs) {
     chrome.scripting
-      .executeScript({ target: { tabId: tab.id, allFrames }, files: ['content.js'] })
+      .executeScript({ target: { tabId: tab.id, allFrames: true }, files: ['content.js'] })
       .catch(() => {});
   }
 });
@@ -21,15 +20,8 @@ chrome.tabs.onActivated.addListener(({ tabId }) => {
   chrome.runtime.sendMessage({ type: 'TAB_ACTIVATED', tabId }).catch(() => {});
 });
 
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === 'complete') {
-    // Dynamically inject content script into iframes when allow_iframe is on
-    const stored = await chrome.storage.local.get('allow_iframe');
-    if (stored.allow_iframe ?? false) {
-      chrome.scripting
-        .executeScript({ target: { tabId, allFrames: true }, files: ['content.js'] })
-        .catch(() => {});
-    }
     updateBadge(tabId);
     chrome.runtime.sendMessage({ type: 'TAB_ACTIVATED', tabId }).catch(() => {});
   }
@@ -47,7 +39,7 @@ async function collectToolsFromAllFrames(tabId) {
   // When iframes are disabled, query only the top frame directly
   if (!allowIframe) {
     try {
-      const response = await chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' });
+      const response = await chrome.tabs.sendMessage(tabId, { action: 'LIST_TOOLS' }, { frameId: 0 });
       if (response?.tools?.length) {
         results.push({
           frameId: 0,
@@ -118,45 +110,4 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
     return;
   }
 
-  // Handle LIST_ALL_FRAME_TOOLS requests from the sidebar/agent
-  if (msg.type === 'LIST_ALL_FRAME_TOOLS') {
-    (async () => {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab) return;
-      const frameResults = await collectToolsFromAllFrames(tab.id);
-      // Send the aggregated results back — the sender will have a callback
-      chrome.runtime.sendMessage({ type: 'ALL_FRAME_TOOLS_RESULT', frameResults }).catch(() => {});
-    })();
-  }
-
-  // Handle EXECUTE_IN_FRAME requests from the sidebar/agent
-  if (msg.type === 'EXECUTE_IN_FRAME') {
-    const { tabId, frameId, name, inputArgs } = msg;
-    (async () => {
-      // Block non-top-frame execution when allow_iframe is off
-      if (frameId !== 0) {
-        const stored = await chrome.storage.local.get('allow_iframe');
-        if (!(stored.allow_iframe ?? false)) {
-          chrome.runtime.sendMessage({
-            type: 'EXECUTE_IN_FRAME_RESULT',
-            response: { success: false, error: 'Iframe tool execution is disabled (allow_iframe is off).' },
-          }).catch(() => {});
-          return;
-        }
-      }
-      try {
-        const response = await chrome.tabs.sendMessage(
-          tabId,
-          { action: 'EXECUTE_TOOL', name, inputArgs },
-          { frameId }
-        );
-        chrome.runtime.sendMessage({ type: 'EXECUTE_IN_FRAME_RESULT', response }).catch(() => {});
-      } catch (err) {
-        chrome.runtime.sendMessage({
-          type: 'EXECUTE_IN_FRAME_RESULT',
-          response: { success: false, error: err.message },
-        }).catch(() => {});
-      }
-    })();
-  }
 });

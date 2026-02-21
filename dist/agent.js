@@ -208,7 +208,7 @@ async function listTools() {
   // If iframes disabled, only query the top frame
   if (!allowIframe) {
     try {
-      const response = await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' });
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' }, { frameId: 0 });
       return (response?.tools || []).map((t) => ({
         ...t,
         _frameId: 0,
@@ -261,7 +261,7 @@ async function listTools() {
   } catch {
     // Fallback: try top frame only
     try {
-      const response = await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' });
+      const response = await chrome.tabs.sendMessage(tab.id, { action: 'LIST_TOOLS' }, { frameId: 0 });
       return (response?.tools || []).map((t) => ({
         ...t,
         _frameId: 0,
